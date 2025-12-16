@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rubi Assistant</title>
+    <link rel="stylesheet" href="drawer.css">
+    <!-- Load component system scripts -->
+    <script src="microcopy.js"></script>
+    <script src="componentRegistry.js"></script>
+    <script src="componentRenderer.js"></script>
+    <script src="layoutTemplates.js"></script>
+    <script src="experienceConfigs.js"></script>
+    <script src="actionComponentMapper.js"></script>
+</head>
+<body>
+    <div id="rubi-drawer" class="rubi-drawer">
+        <!-- Minimal header for close/minimize controls -->
+        <div class="drawer-header">
+            <!-- Phase 10A: System status indicator -->
+            <div id="system-status" class="system-status" style="display: none;">
+                <span class="status-text"></span>
+            </div>
+            <div class="header-actions">
+                <button id="drawer-minimize" class="icon-button subtle" aria-label="Minimize" title="Minimize">
+                    <svg width="14" height="14" viewBox="0 0 16 16">
+                        <path d="M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <button id="drawer-close" class="icon-button subtle" aria-label="Close" title="Close">
+                    <svg width="14" height="14" viewBox="0 0 16 16">
+                        <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main content area for component rendering -->
+        <div id="drawer-content" class="drawer-content">
+            <!-- All content will be dynamically rendered by the component system -->
+        </div>
+    </div>
+    <!-- Load drawer script after component system -->
+    <script src="drawer.js"></script>
+</body>
+</html>

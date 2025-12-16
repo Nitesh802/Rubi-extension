@@ -1,0 +1,249 @@
+id: analyze_opportunity_risk
+version: "2.1.0"
+name: Salesforce Opportunity Risk Analysis with Org Intelligence
+description: Analyzes Salesforce opportunities with org-specific context to identify risks, health scores, and recommended actions
+author: Rubi AI Team
+createdAt: "2024-01-01T00:00:00Z"
+updatedAt: "2024-01-15T00:00:00Z"
+model:
+  provider: openai
+  name: gpt-4-turbo-preview
+  temperature: 0.5
+  maxTokens: 2500
+  topP: 0.9
+  fallbackProviders:
+    - provider: anthropic
+      name: claude-3-sonnet-20240229
+    - provider: google
+      name: gemini-2.0-pro
+systemPrompt: |
+  You are an expert sales analyst specializing in opportunity risk assessment and deal health analysis.
+  Your role is to analyze Salesforce opportunity data and provide actionable insights to improve deal outcomes.
+  
+  {{#if orgIntelligence}}
+  ABOUT THE SELLING ORGANIZATION:
+  Company: {{orgIntelligence.company.name}}
+  Description: {{orgIntelligence.company.description}}
+  Industry: {{orgIntelligence.company.industry}}
+  
+  KEY DIFFERENTIATORS:
+  {{#each orgIntelligence.differentiators}}
+  - {{this}}
+  {{/each}}
+  {{/if}}
+  
+  Core Responsibilities:
+  - Identify risks that could derail deals
+  - Assess buying committee dynamics
+  - Evaluate deal momentum and progression
+  - Recommend specific actions to advance opportunities
+  - Provide accurate forecast confidence scores
+  {{#if orgIntelligence}}
+  - Align recommendations with {{orgIntelligence.company.name}}'s value propositions
+  - Apply industry-specific insights for better risk assessment
+  {{/if}}
+  
+  Analysis Guidelines:
+  - Use data-driven insights from provided fields
+  - Consider stage progression and timeline
+  - Evaluate stakeholder engagement levels
+  - Assess competitive threats and blockers
+  - Focus on actionable recommendations
+  - Never fabricate data not present in the context
+userPrompt: |
+  Analyze the following Salesforce opportunity and provide comprehensive risk assessment:
+
+  URL: {{url}}
+  Platform: {{platform}}
+  Page Type: {{pageType}}
+  Analysis Timestamp: {{timestamp}}
+  
+  Opportunity Details:
+  {{#each fields}}
+  {{@key}}: {{this}}
+  {{/each}}
+  
+  Additional Context:
+  {{visibleText}}
+  
+  {{#if history}}
+  Recent Activity History:
+  {{#each history}}
+  - {{this.date}}: {{this.type}} - {{this.description}}
+  {{/each}}
+  {{/if}}
+  
+  {{#if orgIntelligence}}
+  ===== ORGANIZATION INTELLIGENCE =====
+  
+  IDEAL CUSTOMER PROFILE:
+  Industries: {{#each orgIntelligence.icp.industries}}{{this}}, {{/each}}
+  Company Sizes: {{orgIntelligence.icp.companySizes}}
+  Pain Points We Address: {{#each orgIntelligence.icp.painPoints}}{{this}}; {{/each}}
+  Buying Triggers: {{#each orgIntelligence.icp.triggers}}{{this}}; {{/each}}
+  
+  VALUE PROPOSITIONS TO LEVERAGE:
+  {{#each orgIntelligence.valueProps}}
+  - {{this.title}}: {{this.description}}
+  {{/each}}
+  
+  COMMON OBJECTIONS AND RESPONSES:
+  {{#each orgIntelligence.objections}}
+  - Objection: {{this.objection}}
+    Response: {{this.response}}
+  {{/each}}
+  
+  STRATEGIC NARRATIVES:
+  {{#each orgIntelligence.narratives}}
+  - {{this.title}}: {{#each this.pillars}}{{this}}; {{/each}}
+  {{/each}}
+  {{/if}}
+
+  Provide a comprehensive JSON analysis with this structure:
+  {
+    "dealHealth": {
+      "score": 0-100,
+      "trend": "improving|stable|declining",
+      "stage": "current sales stage",
+      "daysInStage": number,
+      "expectedCloseDate": "YYYY-MM-DD",
+      "closeConfidence": 0-100,
+      "healthIndicators": [
+        {
+          "indicator": "specific health metric",
+          "status": "green|yellow|red",
+          "impact": "description of impact on deal"
+        }
+      ]{{#if orgIntelligence}},
+      "icpFitScore": 0-100,
+      "icpFitAnalysis": "how well this opportunity matches our ideal customer profile"{{/if}}
+    },
+    "riskFactors": [
+      {
+        "category": "timeline|budget|authority|need|competition|engagement|icp_fit",
+        "severity": "critical|high|medium|low",
+        "description": "detailed risk description",
+        "likelihood": 0-100,
+        "impact": "potential impact if risk materializes",
+        "mitigation": "specific action to address this risk{{#if orgIntelligence}}, aligned with {{orgIntelligence.company.name}} capabilities{{/if}}",
+        "owner": "suggested owner for mitigation action"{{#if orgIntelligence}},
+        "relevantValueProp": "which of our value propositions addresses this risk"{{/if}}
+      }
+    ],
+    "nextActions": [
+      {
+        "priority": "critical|high|medium|low",
+        "action": "specific action to take",
+        "owner": "who should take this action",
+        "deadline": "when this should be completed",
+        "expectedOutcome": "what this action will achieve",
+        "dependencies": ["list of dependencies if any"]{{#if orgIntelligence}},
+        "valueAlignment": "how this action reinforces {{orgIntelligence.company.name}} value props"{{/if}}
+      }
+    ],
+    "buyingCommittee": {
+      "identified": true|false,
+      "completeness": 0-100,
+      "members": [
+        {
+          "role": "champion|decision_maker|influencer|blocker|evaluator",
+          "name": "contact name if known",
+          "engagement": "high|medium|low|none",
+          "sentiment": "positive|neutral|negative|unknown",
+          "concerns": ["list of known concerns"],
+          "nextStep": "specific engagement action needed"{{#if orgIntelligence}},
+          "personaMatch": "which buyer persona this stakeholder matches",
+          "messagingApproach": "recommended messaging style based on persona"{{/if}}
+        }
+      ],
+      "gaps": ["missing roles or stakeholders needed"],
+      "powerDynamics": "description of decision-making process"
+    },
+    "stageInsights": {
+      "currentStage": "stage name",
+      "stageProgress": 0-100,
+      "exitCriteria": [
+        {
+          "criteria": "specific exit criteria",
+          "status": "complete|in_progress|not_started",
+          "blockers": ["list of blockers if any"]
+        }
+      ],
+      "velocityRisk": "on_track|slow|stalled",
+      "recommendedStageActions": ["specific actions for current stage"]
+    },
+    "forecastConfidence": {
+      "score": 0-100,
+      "category": "commit|best_case|pipeline|omitted",
+      "reasoning": "explanation for forecast category",
+      "keyAssumptions": ["assumptions underlying the forecast"],
+      "scenarios": {
+        "best": {
+          "probability": 0-100,
+          "closeDate": "YYYY-MM-DD",
+          "value": number
+        },
+        "likely": {
+          "probability": 0-100,
+          "closeDate": "YYYY-MM-DD",
+          "value": number
+        },
+        "worst": {
+          "probability": 0-100,
+          "outcome": "lost|pushed|reduced",
+          "reason": "primary reason for negative outcome"
+        }
+      }
+    },
+    "competitiveAnalysis": {
+      "competitorsIdentified": ["list of known competitors"],
+      "ourPosition": "leading|competitive|trailing|unknown",
+      "differentiators": ["our key advantages{{#if orgIntelligence}}, specifically {{orgIntelligence.company.name}}'s strengths{{/if}}"],
+      "vulnerabilities": ["areas where we're weak"],
+      "counterStrategy": "recommended competitive approach{{#if orgIntelligence}} leveraging {{orgIntelligence.company.name}}'s differentiators{{/if}}"
+    },
+    "engagementMetrics": {
+      "lastContactDays": number,
+      "totalTouchpoints": number,
+      "multiThreaded": true|false,
+      "executiveEngagement": "active|limited|none",
+      "championStrength": "strong|developing|weak|none"
+    },
+    "recommendations": {
+      "immediate": ["actions needed within 24-48 hours"],
+      "shortTerm": ["actions for next 1-2 weeks"],
+      "strategic": ["longer-term strategic considerations"]{{#if orgIntelligence}},
+      "valuePositioning": "how to position {{orgIntelligence.company.name}}'s unique value in this deal",
+      "objectionHandling": ["likely objections and recommended responses based on our objection library"],
+      "narrativeApplication": "which strategic narrative to use for this opportunity"{{/if}}
+    }
+  }
+variables:
+  - url
+  - platform
+  - pageType
+  - fields
+  - visibleText
+  - history
+  - timestamp
+  - userContext
+  - orgIntelligence
+outputFormat: json
+retryPrompt: |
+  The previous analysis was incomplete or invalid. Please regenerate ensuring:
+  1. All required fields are present with valid values
+  2. Scores are integers between 0-100
+  3. Dates use YYYY-MM-DD format
+  4. Arrays contain meaningful, non-empty items
+  5. Enum values match exactly as specified
+  6. Risk severities and priorities use only allowed values
+  {{#if orgIntelligence}}
+  7. Recommendations align with {{orgIntelligence.company.name}}'s capabilities and messaging
+  {{/if}}
+  
+  Reanalyze the opportunity data and provide complete JSON output.
+metadata:
+  schemaVersion: "2.1"
+  requiredContextFields: ["platform", "fields"]
+  analysisDepth: "comprehensive"
+  maxRetries: 2

@@ -1,0 +1,73 @@
+{
+  "version": 2,
+  "name": "rubi-backend",
+  "builds": [
+    {
+      "src": "dist/prod-server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/dist/prod-server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dist/prod-server.js"
+    }
+  ],
+  "env": {
+    "APP_BASE_URL": "@rubi-app-base-url",
+    "PORT": "3000",
+    "NODE_ENV": "@rubi-node-env",
+    "LOG_LEVEL": "@rubi-log-level",
+    "JWT_SECRET": "@rubi-jwt-secret",
+    "ADMIN_JWT_SECRET": "@rubi-admin-jwt-secret",
+    "OPENAI_API_KEY": "@rubi-openai-api-key",
+    "ANTHROPIC_API_KEY": "@rubi-anthropic-api-key",
+    "GOOGLE_API_KEY": "@rubi-google-api-key",
+    "MOODLE_BASE_URL": "@rubi-moodle-base-url",
+    "MOODLE_CONFIG_API_TOKEN": "@rubi-moodle-config-api-token",
+    "MOODLE_CONFIG_ENABLED": "@rubi-moodle-config-enabled",
+    "MOODLE_IDENTITY_JWT_SECRET": "@rubi-moodle-identity-jwt-secret",
+    "MOODLE_CONFIG_TIMEOUT": "@rubi-moodle-config-timeout",
+    "ORG_INTELLIGENCE_PATH": "./org-config/intelligence",
+    "PROVIDER_PRIMARY": "@rubi-provider-primary",
+    "PROVIDER_FALLBACKS": "@rubi-provider-fallbacks",
+    "RATE_LIMIT_MAX": "@rubi-rate-limit-max",
+    "RATE_LIMIT_WINDOW": "@rubi-rate-limit-window",
+    "CORS_ALLOWED_ORIGINS": "@rubi-cors-allowed-origins"
+  },
+  "functions": {
+    "dist/prod-server.js": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  },
+  "regions": ["iad1"],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "framework": null,
+  "public": false,
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "X-Requested-With, Content-Type, Authorization"
+        }
+      ]
+    }
+  ]
+}

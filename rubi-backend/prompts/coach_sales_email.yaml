@@ -1,0 +1,274 @@
+id: coach_sales_email
+version: "2.0.0"
+name: Sales Email Coach
+description: Provides expert coaching and rewriting for sales emails to maximize effectiveness
+author: Rubi AI Team
+createdAt: "2024-01-01T00:00:00Z"
+updatedAt: "2024-11-27T00:00:00Z"
+model:
+  provider: google
+  name: gemini-2.0-pro
+  temperature: 0.7
+  maxTokens: 2300
+  topP: 0.92
+  fallbackProviders:
+    - provider: openai
+      name: gpt-4-turbo-preview
+    - provider: anthropic
+      name: claude-3-sonnet-20240229
+systemPrompt: |
+  You are an expert sales email coach specializing in crafting high-converting business communications.
+  Your expertise spans psychology, persuasion, copywriting, and sales methodology.
+  
+  Coaching Philosophy:
+  - Customer-centric messaging over product-pushing
+  - Value before features
+  - Clarity over cleverness
+  - Personalization over templates
+  - Action-oriented over informational
+  - Research-backed techniques
+  
+  Email Best Practices:
+  - Subject lines that compel opening
+  - First lines that hook attention
+  - Clear value propositions
+  - Social proof and credibility
+  - Single, clear call-to-action
+  - Appropriate length for context
+  - Mobile-optimized formatting
+userPrompt: |
+  Coach and optimize the following sales email:
+
+  URL: {{url}}
+  Platform: {{platform}}
+  Email Context: {{pageType}}
+  Timestamp: {{timestamp}}
+  
+  Email Details:
+  {{#each fields}}
+  {{@key}}: {{this}}
+  {{/each}}
+  
+  Current Email Content:
+  {{visibleText}}
+  
+  {{#if history}}
+  Previous Thread:
+  {{#each history}}
+  - {{this.timestamp}}: {{this.from}} - {{this.snippet}}
+  {{/each}}
+  {{/if}}
+
+  Provide comprehensive sales email coaching with this JSON structure:
+  {
+    "analysis": {
+      "overallScore": 0-100,
+      "strengths": ["specific strengths in the email"],
+      "weaknesses": ["areas needing improvement"],
+      "tone": {
+        "current": "aggressive|passive|balanced|friendly|formal",
+        "effectiveness": "effective|neutral|ineffective",
+        "recommendation": "suggested tone adjustment"
+      },
+      "structure": {
+        "subject": {
+          "current": "current subject line",
+          "score": 0-100,
+          "issues": ["problems with subject"],
+          "improved": ["better subject line options"]
+        },
+        "opening": {
+          "current": "first 1-2 sentences",
+          "effectiveness": "strong|moderate|weak",
+          "improved": "rewritten opening"
+        },
+        "body": {
+          "clarity": 0-100,
+          "flow": "excellent|good|poor",
+          "valueProposition": "clear|vague|missing",
+          "improved": "restructured body content"
+        },
+        "closing": {
+          "current": "current closing",
+          "callToAction": "strong|weak|missing",
+          "improved": "rewritten closing with CTA"
+        }
+      }
+    },
+    "rewritten": {
+      "version1": {
+        "style": "direct|consultative|challenger|value-based",
+        "subject": "optimized subject line",
+        "email": "complete rewritten email",
+        "rationale": "why this version works",
+        "bestFor": "ideal recipient type or situation"
+      },
+      "version2": {
+        "style": "alternative style approach",
+        "subject": "alternative subject line",
+        "email": "complete alternative rewrite",
+        "rationale": "why this version works",
+        "bestFor": "ideal use case"
+      },
+      "version3": {
+        "style": "third approach style",
+        "subject": "third subject option",
+        "email": "third complete rewrite",
+        "rationale": "why this version works",
+        "bestFor": "ideal scenario"
+      }
+    },
+    "elements": {
+      "valueProps": [
+        {
+          "current": "value prop in original",
+          "issue": "what's wrong with it",
+          "improved": "better value proposition",
+          "placement": "where to place it"
+        }
+      ],
+      "socialProof": [
+        {
+          "type": "testimonial|statistic|client_logo|case_study",
+          "content": "specific social proof to add",
+          "placement": "where to insert",
+          "impact": "expected impact"
+        }
+      ],
+      "personalization": [
+        {
+          "opportunity": "personalization opportunity",
+          "research": "what to research",
+          "application": "how to apply it",
+          "example": "example sentence"
+        }
+      ],
+      "urgency": {
+        "current": "current urgency elements",
+        "effectiveness": "effective|weak|missing",
+        "suggestions": ["urgency elements to add"],
+        "caution": "what to avoid"
+      }
+    },
+    "psychology": {
+      "persuasion": {
+        "techniques": ["techniques currently used"],
+        "missing": ["techniques to add"],
+        "implementation": ["how to implement each"]
+      },
+      "cognitive": {
+        "biases": ["cognitive biases to leverage"],
+        "application": ["how to apply each bias"]
+      },
+      "emotional": {
+        "current": "emotional appeal level",
+        "target": "emotions to target",
+        "methods": ["how to evoke them"]
+      }
+    },
+    "recipient": {
+      "profile": {
+        "type": "economic_buyer|technical_buyer|user|influencer",
+        "seniority": "c-level|director|manager|individual",
+        "priorities": ["likely priorities"],
+        "concerns": ["likely concerns"]
+      },
+      "objections": [
+        {
+          "objection": "likely objection",
+          "preemptive": "how to address preemptively",
+          "response": "if raised, how to respond"
+        }
+      ],
+      "triggers": {
+        "positive": ["what will resonate"],
+        "negative": ["what to avoid"]
+      }
+    },
+    "testing": {
+      "subject": {
+        "a": "subject line A",
+        "b": "subject line B",
+        "hypothesis": "what you're testing"
+      },
+      "body": {
+        "element": "element to test",
+        "variation1": "first variation",
+        "variation2": "second variation",
+        "metric": "what to measure"
+      }
+    },
+    "follow-up": {
+      "timing": "when to follow up if no response",
+      "approach": "follow-up strategy",
+      "template": "follow-up email template",
+      "sequence": [
+        {
+          "day": "day number",
+          "angle": "approach angle",
+          "template": "email template"
+        }
+      ]
+    },
+    "metrics": {
+      "predictedOpen": 0-100,
+      "predictedResponse": 0-100,
+      "predictedConversion": 0-100,
+      "readability": {
+        "score": 0-100,
+        "grade": "reading grade level",
+        "time": "estimated read time"
+      },
+      "sentiment": {
+        "positive": 0-100,
+        "neutral": 0-100,
+        "negative": 0-100
+      }
+    },
+    "advanced": {
+      "multithread": ["other stakeholders to copy or contact"],
+      "assets": ["assets to attach or link"],
+      "timing": {
+        "optimal": "best time to send",
+        "avoid": "times to avoid"
+      },
+      "signature": {
+        "current": "current signature effectiveness",
+        "optimized": "improved signature"
+      }
+    },
+    "industry": {
+      "standards": ["industry-specific best practices"],
+      "terminology": ["industry terms to use/avoid"],
+      "examples": ["industry-specific examples to include"]
+    },
+    "compliance": {
+      "issues": ["compliance concerns if any"],
+      "fixes": ["how to address them"]
+    }
+  }
+variables:
+  - url
+  - platform
+  - pageType
+  - fields
+  - visibleText
+  - history
+  - timestamp
+  - userContext
+outputFormat: json
+retryPrompt: |
+  The previous coaching was incomplete or invalid. Please regenerate ensuring:
+  1. All rewritten versions are complete emails, not fragments
+  2. Scores are integers between 0-100
+  3. All suggestions are specific and actionable
+  4. Templates include actual content
+  5. Arrays contain meaningful items
+  6. Analysis is based on actual email content
+  
+  Provide complete sales email coaching with full JSON output.
+metadata:
+  schemaVersion: "2.0"
+  coachingDepth: "comprehensive"
+  rewriteCount: 3
+  maxRetries: 2

@@ -1,0 +1,212 @@
+id: summarize_raw_context
+version: "2.0.0"
+name: Raw Context Summarizer
+description: Intelligently summarizes raw context from any webpage or platform
+author: Rubi AI Team
+createdAt: "2024-01-01T00:00:00Z"
+updatedAt: "2024-11-27T00:00:00Z"
+model:
+  provider: anthropic
+  name: claude-3-sonnet-20240229
+  temperature: 0.5
+  maxTokens: 1500
+  topP: 0.9
+  fallbackProviders:
+    - provider: openai
+      name: gpt-4-turbo-preview
+    - provider: google
+      name: gemini-2.0-pro
+systemPrompt: |
+  You are an expert content analyst capable of extracting meaningful insights from any type of web content.
+  Your role is to intelligently summarize raw context, identify key information, and provide structured insights.
+  
+  Core Capabilities:
+  - Extract essential information from unstructured content
+  - Identify entities, topics, and relationships
+  - Provide contextual understanding
+  - Generate actionable insights from raw data
+  - Adapt analysis based on content type
+  
+  Analysis Guidelines:
+  - Focus on extracting value from any content type
+  - Identify patterns and connections
+  - Provide both summary and detailed insights
+  - Maintain accuracy while being comprehensive
+  - Structure output for easy consumption
+  - Never fabricate information not present in context
+userPrompt: |
+  Analyze and summarize the following raw context:
+
+  URL: {{url}}
+  Platform: {{platform}}
+  Page Type: {{pageType}}
+  Page Title: {{title}}
+  Timestamp: {{timestamp}}
+  
+  Structured Fields:
+  {{#each fields}}
+  {{@key}}: {{this}}
+  {{/each}}
+  
+  Raw Content:
+  {{visibleText}}
+  
+  {{#if history}}
+  Interaction History:
+  {{#each history}}
+  - {{this.timestamp}}: {{this.action}} - {{this.detail}}
+  {{/each}}
+  {{/if}}
+
+  Provide a comprehensive JSON summary with this structure:
+  {
+    "executiveSummary": "2-3 sentence high-level summary of the content",
+    "contentType": "article|profile|dashboard|form|conversation|documentation|product|other",
+    "keyPoints": [
+      {
+        "point": "important point extracted",
+        "importance": "critical|high|medium|low",
+        "category": "category of this point",
+        "evidence": "supporting text or data"
+      }
+    ],
+    "entities": {
+      "people": [
+        {
+          "name": "person name",
+          "role": "their role if known",
+          "context": "relevant context about them",
+          "sentiment": "positive|neutral|negative|mixed"
+        }
+      ],
+      "organizations": [
+        {
+          "name": "organization name",
+          "type": "company|nonprofit|government|other",
+          "relevance": "why this org matters in context",
+          "relationship": "relationship to main content"
+        }
+      ],
+      "products": [
+        {
+          "name": "product/service name",
+          "category": "product category",
+          "mentions": "number of mentions",
+          "context": "how it's discussed"
+        }
+      ],
+      "topics": [
+        {
+          "topic": "main topic",
+          "relevance": "high|medium|low",
+          "sentiment": "positive|neutral|negative|mixed",
+          "keywords": ["related keywords"]
+        }
+      ],
+      "dates": [
+        {
+          "date": "date or time reference",
+          "type": "deadline|event|milestone|historical",
+          "importance": "importance in context"
+        }
+      ],
+      "metrics": [
+        {
+          "metric": "metric name",
+          "value": "metric value",
+          "unit": "unit of measurement",
+          "context": "what this metric represents",
+          "trend": "increasing|decreasing|stable|unknown"
+        }
+      ]
+    },
+    "relationships": [
+      {
+        "entity1": "first entity",
+        "relationship": "type of relationship",
+        "entity2": "second entity",
+        "strength": "strong|moderate|weak",
+        "context": "additional context"
+      }
+    ],
+    "insights": [
+      {
+        "insight": "key insight discovered",
+        "type": "opportunity|risk|trend|pattern|anomaly",
+        "confidence": "high|medium|low",
+        "implications": "what this means",
+        "recommendations": ["suggested actions based on this insight"]
+      }
+    ],
+    "actionableItems": [
+      {
+        "item": "specific actionable item",
+        "priority": "high|medium|low",
+        "category": "follow_up|research|decision|communication",
+        "deadline": "if applicable",
+        "owner": "suggested owner if clear"
+      }
+    ],
+    "questions": [
+      {
+        "question": "important question raised or implied",
+        "importance": "critical|high|medium|low",
+        "context": "why this question matters",
+        "suggestedApproach": "how to find the answer"
+      }
+    ],
+    "sentiment": {
+      "overall": "positive|neutral|negative|mixed",
+      "confidence": 0-100,
+      "drivers": ["main sentiment drivers"],
+      "risks": ["sentiment-related risks"],
+      "opportunities": ["sentiment-based opportunities"]
+    },
+    "context": {
+      "industry": "identified industry if applicable",
+      "domain": "business domain or area",
+      "stage": "if process/lifecycle stage is identifiable",
+      "urgency": "high|medium|low|none",
+      "complexity": "simple|moderate|complex",
+      "completeness": "complete|partial|minimal"
+    },
+    "recommendations": {
+      "immediate": ["actions to take right now"],
+      "shortTerm": ["actions for next few days"],
+      "investigate": ["things to research further"],
+      "monitor": ["items to keep tracking"]
+    },
+    "metadata": {
+      "contentQuality": "high|medium|low",
+      "informationDensity": "high|medium|low",
+      "analysisConfidence": 0-100,
+      "keyThemes": ["main themes identified"],
+      "contentPurpose": "inform|persuade|document|analyze|other"
+    }
+  }
+variables:
+  - url
+  - platform
+  - pageType
+  - fields
+  - visibleText
+  - history
+  - timestamp
+  - title
+  - userContext
+outputFormat: json
+retryPrompt: |
+  The previous summary was incomplete or invalid. Please regenerate ensuring:
+  1. All required fields are present
+  2. Arrays contain specific, meaningful items
+  3. Confidence scores are between 0-100
+  4. Enum values match exactly as specified
+  5. Insights are derived from actual content
+  6. No fabricated information is included
+  
+  Reanalyze the context and provide complete JSON output.
+metadata:
+  schemaVersion: "2.0"
+  analysisType: "comprehensive"
+  adaptability: "high"
+  maxRetries: 2

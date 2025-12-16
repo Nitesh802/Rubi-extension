@@ -1,0 +1,183 @@
+RUBI DRAWER UI ARCHITECTURE PLAN - PHASE 5A
+
+ARCHITECTURE OVERVIEW
+
+The Rubi Drawer UI is the primary user interface for the browser extension, providing an interactive panel that slides in from the right side of the browser window. It presents extracted context information, available actions based on the current page, and displays the results of executed actions. The drawer operates as an injected DOM element within the content script context and communicates with the existing Rubi Actions API, Context Bridge, and Background Worker systems.
+
+The drawer differs from the debug panel in that it provides a production-ready, user-friendly interface designed for sales professionals to access Rubi insights without technical knowledge. While the debug panel shows raw payloads and technical details, the drawer presents information in a business-friendly format with clear action buttons and readable results.
+
+COMPONENT MODEL
+
+ROOT CONTAINER
+The drawer root is a fixed-position DOM element injected into the page body with a shadow DOM for style isolation. It maintains a high z-index to appear above page content and uses CSS transitions for smooth slide-in and slide-out animations. The container width is fixed at 400px and spans the full viewport height.
+
+HEADER COMPONENT
+Contains the Rubi brand identity, current page context summary, and a close button. The header remains fixed at the top of the drawer and displays the platform name and page type in a user-friendly format. It includes a subtle loading indicator that activates during action execution.
+
+CONTEXT SUMMARY COMPONENT
+Displays key extracted fields in a card-based layout immediately below the header. Shows only the most relevant fields based on platform and page type, with confidence indicators using visual badges. Missing required fields are highlighted with a warning icon and helpful message about what information could not be extracted.
+
+ACTION LAUNCHER COMPONENT
+Presents available actions as primary buttons sorted by relevance to the current context. Each action button includes an icon, label, and brief description on hover. Actions that require additional input display a modal dialog for parameter collection. The component dynamically updates when context changes to show only applicable actions.
+
+RESULTS DISPLAY COMPONENT
+Shows action results in formatted cards with appropriate visualization based on result type. Text results display in readable paragraphs, data results show in tables or lists, and recommendations appear as actionable items. Each result card includes a timestamp, action name, and copy button for sharing.
+
+HISTORY PANEL COMPONENT
+Collapsible section at the bottom showing previous action results from the current session. Each history item is condensed but expandable to full view. Users can clear history or export all results as a formatted document.
+
+ERROR STATE COMPONENT
+Replaces the normal content area when critical errors occur, showing a friendly error message with suggested remediation steps. Includes a retry button for transient failures and a feedback link for persistent issues.
+
+LOADING STATE COMPONENT
+Overlays the content area during action execution with a spinner and progress message. Shows estimated time remaining for longer operations and allows cancellation where supported.
+
+STATE MANAGEMENT MODEL
+
+PERSISTENT STATE
+The drawer maintains session-level state in memory including the current context payload, action history array, user preferences for collapsed sections, and the last selected action. This state persists across drawer open and close cycles but clears on page navigation.
+
+TRANSIENT STATE
+Temporary state includes the current loading status, active action execution ID, error messages, and UI interaction states like hover effects and button presses. This state resets when actions complete or the drawer closes.
+
+STATE UPDATE TRIGGERS
+State changes occur through context bridge callbacks when new payloads arrive, action router responses when actions complete, user interactions with UI elements, and background worker messages for external events. All state updates follow a unidirectional flow pattern where events trigger state changes that then update the UI.
+
+STATE STORAGE
+All state lives in JavaScript memory within the content script context. No chrome.storage is used in this phase. State objects are maintained as module-level variables in the drawer JavaScript file with getter and setter functions for controlled access.
+
+MESSAGE AND EVENT FLOWS
+
+DRAWER TO CONTENT SCRIPT
+The drawer sends messages to request context refresh, toggle drawer visibility, and update user preferences. These messages use the window.postMessage API with a specific origin check for security.
+
+DRAWER TO ACTIONS ROUTER
+Direct function calls to window.RubiActionsRouter.runAction() execute selected actions. The drawer passes the current context payload and any additional parameters collected from the user. Results return via Promise resolution.
+
+DRAWER TO CONTEXT BRIDGE
+The drawer registers a callback with window.RubiContextBridge.onNewContext() to receive payload updates. It calls window.RubiContextBridge.getLatestContext() on initialization to populate the initial state.
+
+DRAWER FROM EXTRACTORS
+Context updates flow through the context bridge callback mechanism. When extractors produce new payloads, the bridge notifies all registered listeners including the drawer, which then updates its display.
+
+DRAWER FROM ACTION RESULTS
+Action results return as resolved Promises from the actions router. The drawer awaits these promises and handles both success and error cases, updating the UI accordingly.
+
+DRAWER TO BACKGROUND WORKER
+The drawer sends chrome.runtime.sendMessage() calls for operations requiring elevated permissions like opening new tabs or accessing cross-origin resources. The background worker responds with success or error status.
+
+INTEGRATION WITH EXISTING SYSTEMS
+
+CONTEXT BRIDGE INTEGRATION
+On initialization, the drawer checks for window.RubiContextBridge availability and registers its update callback. It retrieves any existing context immediately and subscribes to future updates. The drawer displays a placeholder message if no context is available.
+
+ACTIONS REGISTRY INTEGRATION
+The drawer queries window.RubiActionsRegistry.getActionsForContext() with the current payload to get applicable actions. It refreshes this list whenever the context changes. Action metadata like labels and descriptions come directly from the registry.
+
+ACTIONS ROUTER INTEGRATION
+When users click action buttons, the drawer calls window.RubiActionsRouter.runAction() with the action ID and current context. It handles the returned Promise to display results or errors. The drawer respects action validation performed by the router.
+
+PLATFORM DETECTOR INTEGRATION
+The drawer uses window.RubiPlatformDetector results embedded in the context payload to customize its appearance and behavior per platform. Platform-specific styling and action ordering adapt based on these values.
+
+EXTRACTOR INTEGRATION
+While the drawer does not directly call extractors, it displays field data they provide in the context payload. The drawer formats this raw data into user-friendly labels and values. Missing fields from extractors trigger helpful UI hints.
+
+LIFECYCLE DESCRIPTION
+
+INITIALIZATION
+When the user clicks the Rubi bubble, the injector creates the drawer DOM structure and loads the drawer JavaScript. The drawer immediately checks for existing context via the bridge and registers its event listeners. Initial UI renders with either context data or a waiting state.
+
+CONTEXT LISTENING
+The drawer maintains an active subscription to context updates throughout its lifecycle. When new payloads arrive, it compares them to the previous state and updates only changed sections. Significant context changes trigger a full UI refresh including new action queries.
+
+UI RENDERING
+The drawer uses a reactive rendering approach where state changes trigger targeted DOM updates. Each component has a render method that produces HTML from current state. Rendering is throttled to prevent excessive updates during rapid context changes.
+
+ACTION EXECUTION
+When users select an action, the drawer disables all buttons and shows a loading overlay. It calls the action router with current context and awaits the result. Success results display in the results section while errors show in error cards. The UI re-enables after completion.
+
+STATE CLEARING
+Navigation events or manual refresh triggers clear the action history and reset transient state. The drawer preserves only the latest context to maintain continuity. Users can manually clear all state via a settings menu option.
+
+NAVIGATION DETECTION
+The drawer listens for beforeunload events to clean up resources and save any pending state. It also monitors URL changes to detect soft navigation in single-page applications. Context mismatches between the URL and payload trigger automatic refresh.
+
+INTEGRATION WITH FIGMA MOCKUPS
+
+COMPONENT MAPPING
+The Figma mockups define visual layouts for each drawer component described in this architecture. The header in Figma maps to the header component, action buttons in Figma map to the action launcher component, and result cards in Figma map to the results display component. Each Figma element will translate to a specific DOM structure.
+
+LAYOUT INFLUENCE
+The Figma designs establish a vertical stack layout with fixed header, scrollable content area, and sticky action section. This influences the component structure to use flexbox containers with appropriate overflow handling. Spacing, padding, and margins from Figma translate directly to CSS values.
+
+ELEMENT MAPPING
+Figma layers named with specific conventions will map to DOM elements with corresponding classes. For example, a Figma layer named ActionButton becomes a div with class drawer-action-button. This systematic mapping ensures design fidelity during implementation.
+
+INTERACTION TRIGGERS
+Interactive elements in Figma like buttons and links define click handlers in the implementation. Hover states shown in Figma translate to CSS hover pseudo-classes. Animation specifications from Figma prototypes guide transition timing and easing functions.
+
+REQUIRED FILES FOR UPCOMING PHASE 5B
+
+DRAWER CORE FILES
+drawer/drawer.js will contain all JavaScript logic for state management, rendering, and event handling
+drawer/drawer.html will define the base HTML structure loaded by the injector
+drawer/drawer.css will provide all styling including responsive layouts and animations
+
+ASSET FILES
+assets/icons/action-icons.svg will contain SVG sprites for all action button icons
+assets/icons/status-icons.svg will include icons for success, error, warning, and loading states
+assets/fonts/inter.woff2 will provide the Inter font family for consistent typography
+
+INTEGRATION UPDATES
+manifest.json will add drawer files to web_accessible_resources array
+content/injector.js will include new functions to create and manage the drawer
+utils/messaging.js will add new message type constants for drawer-specific events
+
+COMPONENT FILES
+drawer/components/header.js will isolate header logic for reusability
+drawer/components/actions.js will handle action button rendering and clicks
+drawer/components/results.js will manage result card display and formatting
+drawer/components/history.js will implement the collapsible history panel
+
+UTILITY FILES
+drawer/utils/formatter.js will provide functions to format context data for display
+drawer/utils/animations.js will contain animation and transition helpers
+drawer/utils/storage.js will abstract state persistence logic for future chrome.storage migration
+
+TESTING FILES
+drawer/tests/drawer.test.js will contain unit tests for drawer functionality
+drawer/tests/integration.test.js will test drawer interaction with other systems
+drawer/tests/mockData.js will provide sample payloads and results for testing
+
+IMPLEMENTATION PRIORITIES
+
+The implementation should begin with the basic drawer structure and slide animation, followed by context display functionality. Action execution comes next, building on the existing actions API. Results display and history features can be added incrementally. Error handling and edge cases should be addressed throughout development rather than as a final step.
+
+The drawer must maintain feature parity with the debug panel while providing a superior user experience. All technical capabilities remain accessible but are presented in a business-friendly interface. The architecture supports future enhancements like real-time collaboration features and AI-powered insights without major restructuring.
+
+PERFORMANCE CONSIDERATIONS
+
+The drawer must initialize quickly without blocking page interactions. Lazy loading of components and deferred loading of non-critical resources will ensure fast initial render. The shadow DOM provides style isolation without performance penalties. Event delegation reduces memory overhead from numerous event listeners.
+
+Result rendering uses virtual scrolling for large datasets to maintain smooth performance. Animation frames are throttled to 60fps using requestAnimationFrame. Memory leaks are prevented by proper event listener cleanup and avoiding circular references in closures.
+
+ACCESSIBILITY REQUIREMENTS
+
+The drawer implements ARIA roles and labels for screen reader compatibility. Keyboard navigation allows full functionality without a mouse. Focus management ensures logical tab order through interactive elements. Color contrast ratios meet WCAG 2.1 AA standards for readability.
+
+Error messages provide clear descriptions and suggested actions. Loading states announce progress to assistive technologies. All interactive elements have visible focus indicators. The drawer respects user preferences for reduced motion and high contrast modes.
+
+SECURITY CONSIDERATIONS
+
+The shadow DOM prevents style injection from the host page. Content Security Policy headers restrict script execution to extension origins. All user input undergoes sanitization before display or transmission. The drawer validates action results to prevent XSS attacks through malicious responses.
+
+Message passing uses origin checks to prevent cross-frame attacks. Sensitive data like API keys never appear in the UI or console logs. The drawer implements rate limiting to prevent abuse of action executions. Error messages avoid exposing system internals or stack traces.
+
+FUTURE EXTENSIBILITY
+
+The architecture supports adding new components through a plugin system where each component registers itself with the drawer core. New action types can be added without modifying existing code through the registry pattern. The state management model accommodates additional data sources through event subscriptions.
+
+Theming support allows customization of colors, fonts, and spacing through CSS variables. Internationalization uses message keys that map to locale-specific strings. The component model enables A/B testing of different UI variations. WebSocket support for real-time updates can be added to the message flow architecture.
+
+This architecture provides a solid foundation for the Rubi Drawer UI that integrates seamlessly with existing systems while maintaining flexibility for future enhancements. The modular design enables parallel development of components and incremental feature additions without disrupting core functionality.

@@ -1,0 +1,192 @@
+PHASE 10B - E2E TEST SCRIPT
+Manual Test Instructions for Production Wiring
+
+PREREQUISITES
+1. Moodle instance running at localhost:8080 (or configured URL)
+2. Backend service running at localhost:3000 (or configured URL)
+3. Browser extension loaded in Chrome/Edge
+4. Test user account in Moodle with appropriate permissions
+
+ENVIRONMENT SETUP
+1. Backend Configuration:
+   - Copy rubi-backend/src/config/production.example.env to .env
+   - Set MOODLE_BASE_URL to your Moodle instance
+   - Set MOODLE_API_TOKEN to match Moodle plugin setting
+   - Set IDENTITY_JWT_SECRET to match Moodle plugin setting
+   - Set EXTENSION_AUTH_TOKEN to match extension config
+   - Configure at least one LLM provider (OpenAI recommended)
+
+2. Moodle Plugin Configuration:
+   - Install local_rubi_ai_admin plugin in Moodle
+   - Navigate to Site Administration > Plugins > Local plugins > Rubi AI Admin
+   - Configure Backend URL: http://localhost:3000
+   - Set Backend API Token (must match backend .env)
+   - Set Identity JWT Secret (must match backend .env)
+   - Configure LLM provider and model preferences
+   - Enable desired features (context extraction, action suggestions)
+
+3. Extension Configuration:
+   - Open extension options/settings page
+   - Verify environment is set to "local" or appropriate mode
+   - Check that backend URL matches your backend instance
+   - Check that Moodle URL matches your Moodle instance
+
+TEST 1: IDENTITY FLOW
+1. Open Moodle and log in with test user
+2. Open any webpage (e.g., LinkedIn profile)
+3. Open browser DevTools Console
+4. Execute: await window.RubiSessionBridge.getCurrentIdentity()
+5. VERIFY:
+   - Returns identity object with userId, email, orgId
+   - metadata.identityVersion shows "2.1-moodle"
+   - identityJwt field contains JWT token
+
+6. Execute: window.RubiSessionBridge.getIdentityJwt()
+7. VERIFY:
+   - Returns JWT token string
+   - Token is not null or undefined
+
+TEST 2: ORG CONFIG LOADING
+1. With backend running, check backend logs
+2. Open a supported page (LinkedIn, Salesforce, Gmail)
+3. Trigger context extraction (click Rubi icon or wait for auto-extraction)
+4. Check backend logs for:
+   - "Fetching org config from backend..."
+   - "Org config fetched successfully"
+5. VERIFY in backend logs:
+   - orgConfigSource: "moodle" (first fetch)
+   - orgConfigSource: "cache" (subsequent fetches within TTL)
+
+TEST 3: BACKEND ACTION EXECUTION
+1. Navigate to LinkedIn profile page
+2. Open Rubi drawer (click extension icon)
+3. Wait for context extraction to complete
+4. Click any action button (e.g., "Analyze Profile")
+5. Check browser DevTools Network tab for:
+   - Request to /api/actions/execute
+   - Headers include X-Extension-Token
+   - Headers include X-Identity-Token (if identity available)
+6. VERIFY response contains:
+   - status: "success"
+   - data.metadata.orgConfigSource
+   - data.metadata.identitySource
+   - data.metadata.provider (LLM provider used)
+
+TEST 4: DRAWER STATUS INDICATOR
+1. Open Rubi drawer on any supported page
+2. Look for status indicator (top-right of drawer or page)
+3. VERIFY status shows:
+   - "Rubi Connected" (green) when fully connected
+   - Shows provider/model in tooltip on hover
+4. Disconnect backend or Moodle
+5. Refresh page and reopen drawer
+6. VERIFY status shows:
+   - "Limited Mode" (yellow) with reason
+   - Lists specific issues (e.g., "default config", "no identity")
+
+TEST 5: FALLBACK CHAIN
+1. Stop Moodle service
+2. Restart backend
+3. Open supported page and trigger action
+4. VERIFY in backend logs:
+   - "Moodle fetch failed"
+   - "Using fallback config"
+   - Action still executes with fallback settings
+
+6. Stop backend service
+7. Trigger action from extension
+8. VERIFY:
+   - Extension shows appropriate error
+   - Drawer remains functional
+   - Status indicator shows offline mode
+
+TEST 6: PROVIDER SELECTION
+1. In Moodle settings, set LLM provider to "openai"
+2. Trigger an action from extension
+3. Check backend logs for:
+   - "Provider selected: openai"
+   - Response metadata shows provider: "openai"
+
+4. Change Moodle setting to different provider
+5. Clear backend cache or wait for TTL expiry
+6. Trigger action again
+7. VERIFY new provider is used
+
+TEST 7: FEATURE FLAGS
+1. In Moodle settings, disable "Action Suggestions"
+2. Clear cache or wait for TTL
+3. Open drawer on supported page
+4. VERIFY:
+   - Action suggestions not shown
+   - Other features still work
+
+5. Re-enable feature in Moodle
+6. Refresh and verify feature returns
+
+TEST 8: MULTI-ENVIRONMENT
+1. Open extension environment settings
+2. Switch to "offline" mode
+3. VERIFY:
+   - All external calls blocked
+   - Extension works with mock data
+   - Status shows offline mode
+
+4. Switch to "staging" mode
+5. VERIFY:
+   - Attempts to connect to staging URLs
+   - Falls back gracefully if staging not available
+
+6. Switch back to "local" mode
+7. VERIFY normal operation resumes
+
+TEST 9: DEBUG PANEL
+1. Open extension debug panel (if available)
+2. VERIFY panel shows:
+   - Current environment mode
+   - Backend connection status
+   - Moodle connection status
+   - Current identity (userId, orgId)
+   - Org config status
+   - Provider being used
+
+TEST 10: ERROR RECOVERY
+1. Start with everything working
+2. Stop backend mid-action
+3. VERIFY:
+   - Action fails gracefully
+   - Error message shown in drawer
+   - Extension remains functional
+
+4. Restart backend
+5. Retry action
+6. VERIFY action succeeds
+
+DIAGNOSTIC SIGNALS CHECKLIST
+Green (Full Production):
+□ Identity loads from Moodle
+□ Org config loads from Moodle
+□ Backend accepts extension token
+□ Actions execute via backend
+□ Correct provider selected per org config
+□ Status shows "Rubi Connected"
+
+Yellow (Partial/Fallback):
+□ Identity from cache or fallback
+□ Org config from cache or fallback
+□ Backend connection intermittent
+□ Using fallback provider
+□ Status shows "Limited Mode"
+
+Red (Offline/Error):
+□ No backend connection
+□ No Moodle connection
+□ Actions fail to execute
+□ Status shows errors
+
+COMPLETION CRITERIA
+□ All 10 tests pass
+□ All green signals achieved in production setup
+□ Fallback modes work correctly
+□ Error recovery successful
+□ Multi-environment switching works
+□ Debug panel shows correct information

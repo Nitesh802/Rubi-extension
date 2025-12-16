@@ -1,0 +1,495 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Salesforce Opportunity Risk Analysis",
+  "type": "object",
+  "required": [
+    "dealHealth",
+    "riskFactors",
+    "nextActions",
+    "buyingCommittee",
+    "stageInsights",
+    "forecastConfidence",
+    "competitiveAnalysis",
+    "engagementMetrics",
+    "recommendations"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "dealHealth": {
+      "type": "object",
+      "required": ["score", "trend", "stage", "daysInStage", "expectedCloseDate", "closeConfidence", "healthIndicators"],
+      "additionalProperties": false,
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "trend": {
+          "type": "string",
+          "enum": ["improving", "stable", "declining"]
+        },
+        "stage": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "daysInStage": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedCloseDate": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "closeConfidence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "healthIndicators": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["indicator", "status", "impact"],
+            "additionalProperties": false,
+            "properties": {
+              "indicator": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "status": {
+                "type": "string",
+                "enum": ["green", "yellow", "red"]
+              },
+              "impact": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            }
+          }
+        }
+      }
+    },
+    "riskFactors": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": ["category", "severity", "description", "likelihood", "impact", "mitigation", "owner"],
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": ["timeline", "budget", "authority", "need", "competition", "engagement"]
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 500
+          },
+          "likelihood": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "impact": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          },
+          "mitigation": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 500
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      }
+    },
+    "nextActions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["priority", "action", "owner", "deadline", "expectedOutcome"],
+        "additionalProperties": false,
+        "properties": {
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          },
+          "action": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 500
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "deadline": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "expectedOutcome": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          }
+        }
+      }
+    },
+    "buyingCommittee": {
+      "type": "object",
+      "required": ["identified", "completeness", "members", "gaps", "powerDynamics"],
+      "additionalProperties": false,
+      "properties": {
+        "identified": {
+          "type": "boolean"
+        },
+        "completeness": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["role", "engagement", "sentiment", "nextStep"],
+            "additionalProperties": false,
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": ["champion", "decision_maker", "influencer", "blocker", "evaluator"]
+              },
+              "name": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 200
+              },
+              "engagement": {
+                "type": "string",
+                "enum": ["high", "medium", "low", "none"]
+              },
+              "sentiment": {
+                "type": "string",
+                "enum": ["positive", "neutral", "negative", "unknown"]
+              },
+              "concerns": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 300
+                }
+              },
+              "nextStep": {
+                "type": "string",
+                "minLength": 10,
+                "maxLength": 300
+              }
+            }
+          }
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "powerDynamics": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500
+        }
+      }
+    },
+    "stageInsights": {
+      "type": "object",
+      "required": ["currentStage", "stageProgress", "exitCriteria", "velocityRisk", "recommendedStageActions"],
+      "additionalProperties": false,
+      "properties": {
+        "currentStage": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "stageProgress": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "exitCriteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["criteria", "status"],
+            "additionalProperties": false,
+            "properties": {
+              "criteria": {
+                "type": "string",
+                "minLength": 5,
+                "maxLength": 300
+              },
+              "status": {
+                "type": "string",
+                "enum": ["complete", "in_progress", "not_started"]
+              },
+              "blockers": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              }
+            }
+          }
+        },
+        "velocityRisk": {
+          "type": "string",
+          "enum": ["on_track", "slow", "stalled"]
+        },
+        "recommendedStageActions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          }
+        }
+      }
+    },
+    "forecastConfidence": {
+      "type": "object",
+      "required": ["score", "category", "reasoning", "keyAssumptions", "scenarios"],
+      "additionalProperties": false,
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "category": {
+          "type": "string",
+          "enum": ["commit", "best_case", "pipeline", "omitted"]
+        },
+        "reasoning": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500
+        },
+        "keyAssumptions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 300
+          }
+        },
+        "scenarios": {
+          "type": "object",
+          "required": ["best", "likely", "worst"],
+          "additionalProperties": false,
+          "properties": {
+            "best": {
+              "type": "object",
+              "required": ["probability", "closeDate", "value"],
+              "additionalProperties": false,
+              "properties": {
+                "probability": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "closeDate": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "value": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            },
+            "likely": {
+              "type": "object",
+              "required": ["probability", "closeDate", "value"],
+              "additionalProperties": false,
+              "properties": {
+                "probability": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "closeDate": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "value": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            },
+            "worst": {
+              "type": "object",
+              "required": ["probability", "outcome", "reason"],
+              "additionalProperties": false,
+              "properties": {
+                "probability": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "outcome": {
+                  "type": "string",
+                  "enum": ["lost", "pushed", "reduced"]
+                },
+                "reason": {
+                  "type": "string",
+                  "minLength": 10,
+                  "maxLength": 300
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "competitiveAnalysis": {
+      "type": "object",
+      "required": ["competitorsIdentified", "ourPosition", "differentiators", "vulnerabilities", "counterStrategy"],
+      "additionalProperties": false,
+      "properties": {
+        "competitorsIdentified": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "ourPosition": {
+          "type": "string",
+          "enum": ["leading", "competitive", "trailing", "unknown"]
+        },
+        "differentiators": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 300
+          }
+        },
+        "vulnerabilities": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 300
+          }
+        },
+        "counterStrategy": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500
+        }
+      }
+    },
+    "engagementMetrics": {
+      "type": "object",
+      "required": ["lastContactDays", "totalTouchpoints", "multiThreaded", "executiveEngagement", "championStrength"],
+      "additionalProperties": false,
+      "properties": {
+        "lastContactDays": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalTouchpoints": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "multiThreaded": {
+          "type": "boolean"
+        },
+        "executiveEngagement": {
+          "type": "string",
+          "enum": ["active", "limited", "none"]
+        },
+        "championStrength": {
+          "type": "string",
+          "enum": ["strong", "developing", "weak", "none"]
+        }
+      }
+    },
+    "recommendations": {
+      "type": "object",
+      "required": ["immediate", "shortTerm", "strategic"],
+      "additionalProperties": false,
+      "properties": {
+        "immediate": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          }
+        },
+        "shortTerm": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          }
+        },
+        "strategic": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          }
+        }
+      }
+    },
+    "analyzedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

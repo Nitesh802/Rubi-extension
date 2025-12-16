@@ -1,0 +1,50 @@
+{
+  "companyIdentity": {
+    "companyName": "Fused",
+    "companyDescription": "Boutique consulting and technology firm specializing in sales enablement through customized learning platforms, AI-powered coaching tools, and performance intelligence systems for B2B enterprise revenue teams",
+    "missionStatement": "Transform B2B sales performance through the seamless integration of learning, workflow automation, and contextual AI that lives where sellers actually work",
+    "tagline": "Performance Intelligence for Enterprise Sales",
+    "brandPromise": "Deliver measurable sales performance improvement through custom-built enablement systems that combine methodology, technology, and in-the-flow coaching",
+    "headquarters": "San Francisco, CA with operations in Lisbon, Portugal",
+    "regionsOperated": ["United States", "Europe (Portugal, UK, Germany)", "Canada"],
+    "employeeCount": "25-50",
+    "websiteUrl": "https://fused.ai",
+    "primaryIndustry": "Sales Enablement & Performance Technology",
+    "secondaryIndustries": ["Learning & Development", "B2B Consulting", "AI/ML Applications"]
+  },
+  "valuePropositions": [
+    {
+      "title": "Measurable Sales Performance Improvement",
+      "description": "Drive quantifiable improvements in pipeline quality, deal velocity, and win rates",
+      "proofPoints": ["Average 35% increase in qualified pipeline", "42% reduction in rep ramp time"],
+      "examples": ["Waters Corporation: 40% pipeline quality improvement"],
+      "metrics": ["Pipeline velocity +35%", "Win rate +22%"]
+    }
+  ],
+  "differentiators": [],
+  "productCatalog": [],
+  "icp": {
+    "targetIndustries": ["B2B SaaS", "Life Sciences", "Energy"],
+    "targetRoles": ["VP Sales", "Head of Enablement"],
+    "companySizes": ["500-10000 employees"],
+    "geographicFocus": ["North America", "Europe"],
+    "buyingTriggers": ["Pipeline quality crisis", "New product launch"],
+    "painPoints": ["Inconsistent deal qualification", "Long ramp times"],
+    "goals": ["Improve pipeline quality", "Reduce sales cycle"],
+    "maturityLevelIndicators": ["Has defined sales methodology", "CRM is system of record"]
+  },
+  "buyerPersonas": [],
+  "competitiveLandscape": [],
+  "strategicNarratives": [],
+  "objectionLibrary": [],
+  "messagingRules": {
+    "toneGuidelines": ["Professional", "Data-driven"],
+    "forbiddenPhrases": ["Revolutionary", "Game-changing"],
+    "preferredTerms": {"AI": "Intelligence"},
+    "formattingRules": ["Lead with value"],
+    "interactionStyle": "Consultative",
+    "responseLengthGuidelines": {"email": "3-5 sentences"}
+  },
+  "industryIntelligence": [],
+  "successStories": []
+}

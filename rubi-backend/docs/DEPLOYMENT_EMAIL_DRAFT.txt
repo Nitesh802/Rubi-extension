@@ -1,0 +1,95 @@
+Subject: Rubi AI Backend Deployment - Action Required (Mike: AWS, Nitesh: Moodle Plugin)
+
+Hi Mike and Nitesh,
+
+We're ready to deploy the Rubi AI Backend to production. This is a critical component that powers the AI intelligence for our Rubi Browser Extension and Moodle integration.
+
+## Big Picture Objective
+
+We're deploying an AI orchestration backend that:
+- Serves as the secure bridge between our browser extension and multiple AI providers (OpenAI, Anthropic, Google)
+- Integrates with Moodle/Rubi to fetch organization configurations and user identity
+- Enables AI-powered features in LinkedIn, Salesforce, Gmail, and other platforms via the browser extension
+- Keeps all AI API keys and sensitive operations server-side for security
+
+The backend will be hosted at https://ai.fus-ed.com and will integrate with our Rubi development instance at https://sales.multi.rubi.digital.
+
+## Your Action Items
+
+### Mike - AWS Infrastructure & Backend Deployment
+
+Your documentation is in the GitHub repo at:
+📄 **rubi-backend/docs/AWS_EC2_DEPLOYMENT_GUIDE.txt**
+
+This guide contains everything you need to:
+1. Spin up the EC2 instance
+2. Install all dependencies (Node.js, PM2, Nginx)
+3. Deploy the backend application
+4. Configure SSL with Let's Encrypt for ai.fus-ed.com
+5. Set up environment variables and PM2 process management
+
+Expected time: 4-6 hours
+
+### Nitesh - Moodle Plugin Installation
+
+Your documentation is in the GitHub repo at:
+📄 **rubi-backend/local_rubi_ai_admin/INSTALLATION_GUIDE.md**
+
+The plugin folder you need to install is:
+📁 **rubi-backend/local_rubi_ai_admin/**
+
+This guide walks you through:
+1. Installing the plugin on https://sales.multi.rubi.digital
+2. Configuring API endpoints and authentication
+3. Setting up organization configurations
+4. Testing the integration endpoints
+
+Expected time: 1-2 hours
+
+## Critical Coordination Point
+
+Before you start, you both need to agree on two shared secrets:
+
+1. **JWT Secret**: A 32+ character string for identity token validation
+2. **API Token**: A 32+ character string for backend-to-Moodle authentication
+
+These MUST be identical on both sides. I suggest you coordinate on Slack/Teams to generate and share these securely.
+
+## GitHub Repository
+
+Repository: https://github.com/[your-org]/Rubi_Browser_Extension
+Branch: main
+
+Both of your guides are in the rubi-backend folder. There's also a team coordination document at:
+📄 **rubi-backend/docs/DEPLOYMENT_TEAM_ASSIGNMENTS.md**
+
+## Success Criteria
+
+Once both parts are deployed, we should be able to:
+1. Access https://ai.fus-ed.com/api/health and get a healthy response
+2. Have the backend successfully fetch config from Moodle
+3. Test the browser extension making AI-powered analysis of LinkedIn profiles
+4. See proper authentication and org configuration working end-to-end
+
+## Next Steps
+
+1. Review your respective documentation
+2. Coordinate on the shared secrets
+3. Mike deploys the backend infrastructure first
+4. Nitesh installs the Moodle plugin
+5. We test the integration together
+
+Please confirm receipt and let me know if you have any questions. Can we target completion by [DATE]?
+
+Also, please track your progress in our project channel and flag any blockers immediately.
+
+Thanks for your help getting this critical infrastructure live!
+
+Best,
+[Your name]
+
+P.S. For quick reference:
+- Mike's guide: AWS_EC2_DEPLOYMENT_GUIDE.txt
+- Nitesh's guide: INSTALLATION_GUIDE.md  
+- Backend will run at: https://ai.fus-ed.com
+- Moodle dev instance: https://sales.multi.rubi.digital

@@ -1,0 +1,334 @@
+id: analyze_historical_interactions
+version: "2.0.0"
+name: Historical Interaction Analyzer
+description: Analyzes patterns and insights from historical interactions to inform future engagement
+author: Rubi AI Team
+createdAt: "2024-01-01T00:00:00Z"
+updatedAt: "2024-11-27T00:00:00Z"
+model:
+  provider: anthropic
+  name: claude-3-sonnet-20240229
+  temperature: 0.6
+  maxTokens: 2000
+  topP: 0.9
+  fallbackProviders:
+    - provider: openai
+      name: gpt-4-turbo-preview
+    - provider: google
+      name: gemini-2.0-pro
+systemPrompt: |
+  You are an expert interaction analyst specializing in relationship intelligence and engagement pattern recognition.
+  Your role is to analyze historical interactions to uncover insights, patterns, and actionable recommendations.
+  
+  Analysis Focus Areas:
+  - Communication patterns and preferences
+  - Relationship evolution and trajectory
+  - Engagement effectiveness metrics
+  - Behavioral insights and triggers
+  - Opportunity identification
+  - Risk and churn indicators
+  
+  Analytical Principles:
+  - Data-driven pattern recognition
+  - Predictive insight generation
+  - Actionable recommendation focus
+  - Relationship lifecycle understanding
+  - Multi-dimensional analysis
+  - Evidence-based conclusions
+userPrompt: |
+  Analyze the following historical interactions and provide comprehensive insights:
+
+  URL: {{url}}
+  Platform: {{platform}}
+  Context: {{pageType}}
+  Analysis Time: {{timestamp}}
+  
+  Current Context:
+  {{#each fields}}
+  {{@key}}: {{this}}
+  {{/each}}
+  
+  Visible Information:
+  {{visibleText}}
+  
+  Historical Interactions:
+  {{#if history}}
+  {{#each history}}
+  Interaction {{@index}}:
+  - Date: {{this.timestamp}}
+  - Type: {{this.type}}
+  - Channel: {{this.channel}}
+  - Participants: {{this.participants}}
+  - Content: {{this.content}}
+  - Outcome: {{this.outcome}}
+  - Notes: {{this.notes}}
+  {{/each}}
+  {{else}}
+  No historical interactions available.
+  {{/if}}
+
+  Provide comprehensive historical analysis with this JSON structure:
+  {
+    "summary": {
+      "totalInteractions": number,
+      "timeSpan": {
+        "start": "earliest interaction date",
+        "end": "most recent interaction date",
+        "duration": "time span in days"
+      },
+      "relationshipStage": "prospecting|qualifying|developing|established|at_risk|dormant",
+      "trajectory": "strengthening|stable|weakening|volatile",
+      "engagementScore": 0-100
+    },
+    "patterns": {
+      "communication": {
+        "preferredChannels": ["email|phone|meeting|social"],
+        "responseTime": {
+          "average": "average response time",
+          "trend": "improving|stable|declining"
+        },
+        "initiator": {
+          "usually": "us|them|balanced",
+          "ratio": "us:them ratio"
+        },
+        "frequency": {
+          "average": "interactions per period",
+          "trend": "increasing|stable|decreasing",
+          "optimal": "recommended frequency"
+        },
+        "timing": {
+          "bestDays": ["preferred days"],
+          "bestTimes": ["preferred times"],
+          "avoid": ["times to avoid"]
+        }
+      },
+      "content": {
+        "topics": [
+          {
+            "topic": "discussion topic",
+            "frequency": "how often discussed",
+            "sentiment": "positive|neutral|negative",
+            "importance": "high|medium|low"
+          }
+        ],
+        "tone": {
+          "evolution": "how tone has changed",
+          "current": "formal|friendly|transactional|collaborative",
+          "effectiveness": "effective|neutral|ineffective"
+        },
+        "length": {
+          "trend": "increasing|stable|decreasing",
+          "preference": "brief|moderate|detailed"
+        }
+      },
+      "behavioral": {
+        "triggers": [
+          {
+            "trigger": "what prompts response",
+            "response": "typical response",
+            "reliability": "high|medium|low"
+          }
+        ],
+        "preferences": ["identified preferences"],
+        "objections": ["recurring objections or concerns"],
+        "values": ["demonstrated values or priorities"]
+      }
+    },
+    "relationship": {
+      "strength": 0-100,
+      "trust": {
+        "level": "high|medium|low",
+        "indicators": ["trust-building events"],
+        "risks": ["trust-eroding factors"]
+      },
+      "engagement": {
+        "quality": "deep|surface|transactional",
+        "reciprocity": "balanced|one-sided",
+        "investment": "high|medium|low"
+      },
+      "milestones": [
+        {
+          "date": "milestone date",
+          "event": "what happened",
+          "impact": "positive|neutral|negative",
+          "significance": "why it matters"
+        }
+      ],
+      "inflectionPoints": [
+        {
+          "date": "when change occurred",
+          "before": "state before",
+          "after": "state after",
+          "cause": "what caused the change"
+        }
+      ]
+    },
+    "outcomes": {
+      "successes": [
+        {
+          "interaction": "successful interaction",
+          "date": "when it occurred",
+          "factors": ["success factors"],
+          "lessons": ["what can be replicated"]
+        }
+      ],
+      "failures": [
+        {
+          "interaction": "unsuccessful interaction",
+          "date": "when it occurred",
+          "factors": ["failure factors"],
+          "lessons": ["what to avoid"]
+        }
+      ],
+      "conversions": [
+        {
+          "from": "starting state",
+          "to": "end state",
+          "timeframe": "how long it took",
+          "key": "what made the difference"
+        }
+      ]
+    },
+    "insights": [
+      {
+        "insight": "key discovery",
+        "type": "behavioral|preference|opportunity|risk",
+        "confidence": "high|medium|low",
+        "evidence": ["supporting interactions"],
+        "implication": "what this means",
+        "action": "recommended action"
+      }
+    ],
+    "predictions": {
+      "nextInteraction": {
+        "likelihood": 0-100,
+        "timeframe": "expected timing",
+        "type": "likely interaction type",
+        "topic": "probable discussion topic"
+      },
+      "relationship": {
+        "direction": "improving|stable|declining",
+        "risks": ["potential relationship risks"],
+        "opportunities": ["relationship opportunities"]
+      },
+      "outcomes": {
+        "conversion": 0-100,
+        "churn": 0-100,
+        "expansion": 0-100,
+        "advocacy": 0-100
+      }
+    },
+    "recommendations": {
+      "immediate": [
+        {
+          "action": "specific action to take",
+          "reason": "why now",
+          "approach": "how to do it",
+          "expected": "expected outcome"
+        }
+      ],
+      "strategic": [
+        {
+          "strategy": "longer-term strategy",
+          "objective": "what to achieve",
+          "timeline": "implementation timeline",
+          "milestones": ["key milestones"]
+        }
+      ],
+      "avoid": [
+        {
+          "behavior": "what to avoid",
+          "reason": "why to avoid it",
+          "alternative": "what to do instead"
+        }
+      ],
+      "optimize": [
+        {
+          "area": "area to optimize",
+          "current": "current approach",
+          "improved": "better approach",
+          "impact": "expected improvement"
+        }
+      ]
+    },
+    "segments": {
+      "byPeriod": [
+        {
+          "period": "time period",
+          "interactions": number,
+          "quality": "high|medium|low",
+          "outcomes": "summary of outcomes"
+        }
+      ],
+      "byType": [
+        {
+          "type": "interaction type",
+          "count": number,
+          "effectiveness": 0-100,
+          "insights": ["type-specific insights"]
+        }
+      ],
+      "byOutcome": [
+        {
+          "outcome": "outcome category",
+          "count": number,
+          "patterns": ["common patterns"]
+        }
+      ]
+    },
+    "comparison": {
+      "benchmark": {
+        "versus": "industry|portfolio|segment",
+        "frequency": "above|at|below average",
+        "quality": "above|at|below average",
+        "outcomes": "above|at|below average"
+      },
+      "peers": {
+        "similar": ["similar relationships"],
+        "differences": ["key differences"],
+        "lessons": ["applicable lessons"]
+      }
+    },
+    "actionPlan": {
+      "next30Days": [
+        {
+          "week": number,
+          "actions": ["specific actions"],
+          "goals": ["weekly goals"]
+        }
+      ],
+      "kpis": [
+        {
+          "metric": "KPI to track",
+          "current": "current value",
+          "target": "target value",
+          "timeline": "achievement timeline"
+        }
+      ]
+    }
+  }
+variables:
+  - url
+  - platform
+  - pageType
+  - fields
+  - visibleText
+  - history
+  - timestamp
+  - userContext
+outputFormat: json
+retryPrompt: |
+  The previous analysis was incomplete or invalid. Please regenerate ensuring:
+  1. All dates use consistent format
+  2. Scores are integers between 0-100
+  3. Patterns are based on actual historical data
+  4. Arrays contain specific, meaningful items
+  5. Predictions include confidence levels
+  6. Recommendations are actionable and specific
+  
+  Reanalyze the historical interactions and provide complete JSON output.
+metadata:
+  schemaVersion: "2.0"
+  analysisDepth: "comprehensive"
+  timeSeriesAnalysis: true
+  maxRetries: 2

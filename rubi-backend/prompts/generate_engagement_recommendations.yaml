@@ -1,0 +1,208 @@
+id: generate_engagement_recommendations
+version: "2.0.0"
+name: Engagement Recommendation Generator
+description: Generates personalized engagement strategies and recommendations for professional interactions
+author: Rubi AI Team
+createdAt: "2024-01-01T00:00:00Z"
+updatedAt: "2024-11-27T00:00:00Z"
+model:
+  provider: anthropic
+  name: claude-3-sonnet-20240229
+  temperature: 0.8
+  maxTokens: 2000
+  topP: 0.95
+  fallbackProviders:
+    - provider: google
+      name: gemini-2.0-pro
+    - provider: openai
+      name: gpt-4-turbo-preview
+systemPrompt: |
+  You are an expert engagement strategist specializing in professional relationship building and communication.
+  Your role is to generate highly personalized, contextual engagement recommendations that drive meaningful connections.
+  
+  Engagement Principles:
+  - Personalization over generic approaches
+  - Value-first interactions
+  - Authentic relationship building
+  - Strategic timing and sequencing
+  - Multi-channel engagement strategies
+  - Psychology-informed techniques
+  
+  Strategy Guidelines:
+  - Consider recipient's personality and preferences
+  - Account for industry norms and culture
+  - Balance persistence with respect
+  - Focus on mutual benefit
+  - Provide specific, actionable tactics
+  - Never suggest manipulative or aggressive approaches
+userPrompt: |
+  Generate comprehensive engagement recommendations based on the following context:
+
+  URL: {{url}}
+  Platform: {{platform}}
+  Page Type: {{pageType}}
+  Current Time: {{timestamp}}
+  
+  Target Context:
+  {{#each fields}}
+  {{@key}}: {{this}}
+  {{/each}}
+  
+  Available Information:
+  {{visibleText}}
+  
+  {{#if history}}
+  Previous Engagement History:
+  {{#each history}}
+  - {{this.timestamp}}: {{this.type}} - {{this.outcome}}
+  {{/each}}
+  {{/if}}
+
+  Generate personalized engagement recommendations with this JSON structure:
+  {
+    "profile": {
+      "summary": "brief summary of the engagement target",
+      "personalityType": "analytical|driver|expressive|amiable",
+      "communicationStyle": "direct|detailed|friendly|formal",
+      "decisionMaking": "fast|deliberate|consensus|data-driven",
+      "values": ["identified values or priorities"],
+      "interests": ["professional and personal interests"],
+      "painPoints": ["identified challenges or needs"],
+      "goals": ["identified objectives or aspirations"]
+    },
+    "recommendations": [
+      {
+        "strategy": "specific engagement strategy",
+        "channel": "linkedin|email|phone|in-person|social",
+        "timing": {
+          "optimal": "best time to engage",
+          "avoid": "times to avoid",
+          "frequency": "recommended cadence"
+        },
+        "approach": {
+          "opening": "how to start the engagement",
+          "value": "value proposition to lead with",
+          "tone": "recommended tone and style",
+          "length": "brief|moderate|detailed"
+        },
+        "content": {
+          "topics": ["topics to discuss"],
+          "avoid": ["topics to avoid"],
+          "questions": ["engaging questions to ask"],
+          "insights": ["insights to share"]
+        },
+        "expectedResponse": "likely response type",
+        "successMetrics": ["how to measure success"],
+        "followUp": {
+          "ifPositive": "next steps if response is positive",
+          "ifNeutral": "approach if lukewarm response",
+          "ifNegative": "how to handle rejection",
+          "timeline": "when to follow up"
+        }
+      }
+    ],
+    "templates": [
+      {
+        "scenario": "specific use case",
+        "channel": "linkedin|email|phone|sms",
+        "subject": "subject line if applicable",
+        "template": "complete message template with personalization markers",
+        "customization": ["elements to personalize"],
+        "callToAction": "specific CTA",
+        "alternativeApproaches": ["backup options if primary doesn't work"]
+      }
+    ],
+    "sequences": [
+      {
+        "name": "sequence name",
+        "objective": "what this sequence achieves",
+        "duration": "total time span",
+        "steps": [
+          {
+            "day": "day number",
+            "action": "specific action to take",
+            "channel": "communication channel",
+            "content": "what to communicate",
+            "trigger": "what triggers next step",
+            "exitCriteria": "when to stop sequence"
+          }
+        ]
+      }
+    ],
+    "personalisation": {
+      "hooks": ["personal connection points"],
+      "commonGround": ["shared experiences or interests"],
+      "referencePoints": ["things to reference in conversation"],
+      "compliments": ["authentic compliments to give"],
+      "valueProps": ["specific value you can provide"]
+    },
+    "psychology": {
+      "motivators": ["what motivates this person"],
+      "fears": ["concerns or fears to address"],
+      "biases": ["cognitive biases to consider"],
+      "persuasion": {
+        "primary": "main persuasion technique",
+        "supporting": ["supporting techniques"],
+        "avoid": ["techniques that won't work"]
+      },
+      "trust": {
+        "builders": ["how to build trust"],
+        "breakers": ["what destroys trust"]
+      }
+    },
+    "competitive": {
+      "differentiation": ["how to stand out"],
+      "uniqueValue": "your unique value proposition",
+      "positioning": "how to position yourself",
+      "advantages": ["your competitive advantages"],
+      "weaknesses": ["areas to minimize or address"]
+    },
+    "risks": [
+      {
+        "risk": "potential risk",
+        "likelihood": "high|medium|low",
+        "impact": "high|medium|low",
+        "mitigation": "how to prevent or handle"
+      }
+    ],
+    "metrics": {
+      "engagementScore": 0-100,
+      "responseProbaility": 0-100,
+      "conversionPotential": 0-100,
+      "relationshipValue": "high|medium|low",
+      "effort": "low|medium|high",
+      "timeline": "immediate|short|medium|long"
+    },
+    "advanced": {
+      "multiThreading": ["other stakeholders to engage"],
+      "socialProof": ["social proof elements to leverage"],
+      "reciprocity": ["reciprocity triggers to use"],
+      "urgency": ["urgency factors if applicable"],
+      "exclusivity": ["exclusivity angles if relevant"]
+    }
+  }
+variables:
+  - url
+  - platform
+  - pageType
+  - fields
+  - visibleText
+  - history
+  - timestamp
+  - userContext
+outputFormat: json
+retryPrompt: |
+  The previous recommendations were incomplete or invalid. Please regenerate ensuring:
+  1. All strategies are specific and actionable
+  2. Templates include actual content, not placeholders
+  3. Scores are integers between 0-100
+  4. Sequences have clear steps and triggers
+  5. All arrays contain meaningful items
+  6. Personality assessments are evidence-based
+  
+  Regenerate comprehensive engagement recommendations with complete JSON output.
+metadata:
+  schemaVersion: "2.0"
+  personalizationLevel: "deep"
+  strategyDepth: "comprehensive"
+  maxRetries: 2

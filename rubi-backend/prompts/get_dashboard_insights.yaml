@@ -1,0 +1,283 @@
+id: get_dashboard_insights
+version: "2.1.0"
+name: Dashboard Insights Generator with Org Intelligence
+description: Generates org-aware actionable insights, alerts, and recommendations for dashboard views
+author: Rubi AI Team
+createdAt: "2024-01-01T00:00:00Z"
+updatedAt: "2024-12-01T00:00:00Z"
+model:
+  provider: openai
+  name: gpt-4-turbo-preview
+  temperature: 0.7
+  maxTokens: 2200
+  topP: 0.9
+  fallbackProviders:
+    - provider: google
+      name: gemini-2.0-pro
+    - provider: anthropic
+      name: claude-3-sonnet-20240229
+systemPrompt: |
+  You are an expert business intelligence analyst specializing in dashboard insights and actionable recommendations.
+  Your role is to analyze dashboard data and provide clear, prioritized insights that drive business action.
+  
+  {{#if orgIntelligence}}
+  ABOUT THE ORGANIZATION:
+  Company: {{orgIntelligence.company.name}}
+  Description: {{orgIntelligence.company.description}}
+  Mission: {{orgIntelligence.company.mission}}
+  Industry: {{orgIntelligence.company.industry}}
+  {{/if}}
+  
+  Core Responsibilities:
+  - Identify patterns and anomalies in data
+  - Generate actionable recommendations
+  - Prioritize alerts by business impact
+  - Provide clear next steps for users
+  - Surface hidden opportunities and risks
+  {{#if orgIntelligence}}
+  - Frame insights through {{orgIntelligence.company.name}}'s strategic lens
+  - Highlight opportunities aligned with our value propositions
+  - Prioritize actions that advance our strategic narratives
+  {{/if}}
+  
+  Analysis Principles:
+  - Focus on actionable over informational
+  - Prioritize by business impact
+  - Provide specific, measurable recommendations
+  - Consider temporal patterns and trends
+  - Balance between immediate actions and strategic insights
+  - Never overwhelm with too many alerts
+  {{#if orgIntelligence}}
+  - Align recommendations with {{orgIntelligence.company.name}}'s go-to-market strategy
+  - Use industry-specific terminology and context
+  {{/if}}
+userPrompt: |
+  Analyze the following dashboard data and generate comprehensive insights:
+
+  URL: {{url}}
+  Platform: {{platform}}
+  Page Type: {{pageType}}
+  Current Time: {{timestamp}}
+  
+  Dashboard Data:
+  {{#each fields}}
+  {{@key}}: {{this}}
+  {{/each}}
+  
+  Visible Content:
+  {{visibleText}}
+  
+  {{#if history}}
+  Recent Activity:
+  {{#each history}}
+  - {{this.timestamp}}: {{this.type}} - {{this.details}}
+  {{/each}}
+  {{/if}}
+  
+  {{#if orgIntelligence}}
+  ===== ORGANIZATION INTELLIGENCE =====
+  
+  OUR VALUE PROPOSITIONS:
+  {{#each orgIntelligence.valueProps}}
+  - {{this.title}}: {{this.description}}
+    Key Metrics: {{#each this.metrics}}{{this}}, {{/each}}
+  {{/each}}
+  
+  IDEAL CUSTOMER PROFILE:
+  Industries: {{#each orgIntelligence.icp.industries}}{{this}}, {{/each}}
+  Target Roles: {{#each orgIntelligence.icp.roles}}{{this}}, {{/each}}
+  Pain Points We Solve: {{#each orgIntelligence.icp.painPoints}}{{this}}, {{/each}}
+  Buying Triggers: {{#each orgIntelligence.icp.triggers}}{{this}}, {{/each}}
+  
+  STRATEGIC NARRATIVES TO ADVANCE:
+  {{#each orgIntelligence.narratives}}
+  - {{this.title}}: Focus on {{#each this.pillars}}{{this}}, {{/each}}
+  {{/each}}
+  
+  KEY DIFFERENTIATORS:
+  {{#each orgIntelligence.differentiators}}
+  - {{this}}
+  {{/each}}
+  
+  SUCCESS METRICS & GOALS:
+  Focus on opportunities that drive the metrics that matter to {{orgIntelligence.company.name}}.
+  {{/if}}
+
+  Generate a comprehensive JSON response with this structure:
+  {
+    "recommendedActions": [
+      {
+        "priority": "critical|high|medium|low",
+        "action": "specific action to take",
+        "reason": "why this action is important",
+        "impact": "expected business impact",{{#if orgIntelligence}}
+        "valueAlignment": "which {{orgIntelligence.company.name}} value prop this reinforces",
+        "icpFit": "how well this aligns with ideal customer profile",{{/if}}
+        "effort": "low|medium|high",
+        "deadline": "suggested completion timeframe",
+        "owner": "suggested role/person to handle",
+        "dependencies": ["any prerequisites or dependencies"],
+        "metrics": ["KPIs that will be affected"]
+      }
+    ],
+    "alerts": [
+      {
+        "severity": "critical|warning|info",
+        "type": "risk|opportunity|anomaly|trend|threshold",
+        "title": "brief alert title",
+        "description": "detailed description of the alert",
+        "affectedMetrics": ["metrics involved"],
+        "suggestedAction": "what to do about this alert",
+        "timeframe": "when this needs attention"
+      }
+    ],
+    "insights": [
+      {
+        "category": "performance|trend|comparison|forecast|anomaly",
+        "insight": "specific insight discovered",
+        "supporting_data": "key data points supporting this",
+        "implications": "what this means for the business",
+        "confidence": "high|medium|low",
+        "actionable": true|false
+      }
+    ],
+    "notifications": [
+      {
+        "type": "achievement|milestone|deadline|reminder|update",
+        "message": "notification content",
+        "importance": "high|medium|low",
+        "actionRequired": true|false,
+        "link": "relevant link or reference if applicable"
+      }
+    ],
+    "recentActivity": [
+      {
+        "timestamp": "ISO datetime",
+        "type": "activity type",
+        "description": "what happened",
+        "impact": "business impact of this activity",
+        "followUp": "any required follow-up"
+      }
+    ],
+    "kpiSummary": {
+      "topPerformers": [
+        {
+          "metric": "metric name",
+          "value": "current value",
+          "change": "% change",
+          "trend": "up|down|stable",
+          "target": "target value if known"
+        }
+      ],
+      "needsAttention": [
+        {
+          "metric": "metric name",
+          "value": "current value",
+          "gap": "gap from target",
+          "trend": "up|down|stable",
+          "action": "recommended action"
+        }
+      ],
+      "opportunities": [
+        {
+          "area": "opportunity area",
+          "potential": "potential value or impact",
+          "effort": "implementation effort",
+          "recommendation": "specific recommendation"{{#if orgIntelligence}},
+          "strategicNarrative": "which narrative this advances",
+          "differentiatorLeverage": "key differentiator to emphasize"{{/if}}
+        }
+      ]
+    },
+    "trendAnalysis": {
+      "positive": ["positive trends observed"],
+      "negative": ["concerning trends"],
+      "emerging": ["new patterns emerging"],
+      "predictions": [
+        {
+          "metric": "what is being predicted",
+          "forecast": "predicted outcome",
+          "confidence": 0-100,
+          "timeframe": "when this will occur",
+          "assumptions": ["key assumptions"]
+        }
+      ]
+    },
+    "competitivePosition": {
+      "strengths": ["competitive advantages shown in data"],
+      "weaknesses": ["areas lagging competition"],
+      "opportunities": ["market opportunities visible"],
+      "threats": ["competitive threats identified"]
+    },
+    "focusAreas": {
+      "today": ["what to focus on today"],
+      "thisWeek": ["priorities for this week"],
+      "thisMonth": ["monthly objectives to track"],
+      "strategic": ["longer-term strategic items"]{{#if orgIntelligence}},
+      "icpAligned": ["opportunities matching ideal customer profile"],
+      "narrativeActions": ["actions that advance strategic narratives"]{{/if}}
+    },
+    "automation": {
+      "suggested": [
+        {
+          "process": "what could be automated",
+          "benefit": "expected benefit",
+          "complexity": "low|medium|high",
+          "recommendation": "specific automation recommendation"
+        }
+      ]
+    }{{#if orgIntelligence}},
+    "orgIntelligenceInsights": {
+      "icpOpportunities": [
+        {
+          "opportunity": "specific ICP-aligned opportunity",
+          "fitScore": 0-100,
+          "matchingCriteria": ["which ICP criteria match"],
+          "recommendedApproach": "how to pursue based on our playbook",
+          "valuePropsToHighlight": ["relevant value propositions"]
+        }
+      ],
+      "strategicAlignment": {
+        "primaryNarrative": "main strategic narrative for current data",
+        "supportingMetrics": ["metrics that support this narrative"],
+        "talkingPoints": ["key points aligned with narrative"],
+        "nextBestActions": ["actions to advance the narrative"]
+      },
+      "competitiveDifferentiation": {
+        "leveragePoints": ["differentiators relevant to current opportunities"],
+        "positioningRecommendations": ["how to position against competition"],
+        "winThemes": ["themes that resonate with our ICP"]
+      },
+      "messagingGuidance": {
+        "keyThemes": ["messaging themes for current context"],
+        "avoidTopics": ["topics or phrases to avoid"],
+        "emphasisAreas": ["areas to emphasize based on data"]
+      }
+    }{{/if}}
+  }
+variables:
+  - url
+  - platform
+  - pageType
+  - fields
+  - visibleText
+  - history
+  - timestamp
+  - userContext
+  - orgIntelligence
+outputFormat: json
+retryPrompt: |
+  The previous output was incomplete or invalid. Please regenerate ensuring:
+  1. All required fields are present with valid values
+  2. Arrays contain specific, actionable items
+  3. Priorities and severities use only allowed values
+  4. Insights are based on actual dashboard data
+  5. Recommendations are specific and measurable
+  6. Confidence scores are between 0-100
+  
+  Reanalyze the dashboard and provide complete JSON output.
+metadata:
+  schemaVersion: "2.0"
+  insightDepth: "comprehensive"
+  priorityFramework: "impact-effort"
+  maxRetries: 2

@@ -1,0 +1,249 @@
+id: analyze_email_message
+version: "2.1.0"
+name: Email Message Analysis with Org Intelligence
+description: Analyzes email messages for clarity, relevance, momentum and provides org-aware coaching suggestions
+author: Rubi AI Team
+createdAt: "2024-01-01T00:00:00Z"
+updatedAt: "2024-12-01T00:00:00Z"
+model:
+  provider: google
+  name: gemini-2.0-pro
+  temperature: 0.6
+  maxTokens: 2000
+  topP: 0.92
+  fallbackProviders:
+    - provider: openai
+      name: gpt-4-turbo-preview
+    - provider: anthropic
+      name: claude-3-sonnet-20240229
+systemPrompt: |
+  You are an expert email communication analyst and sales coach specializing in business email effectiveness.
+  Your role is to analyze email messages and provide actionable feedback to improve communication outcomes.
+  
+  {{#if orgIntelligence}}
+  ABOUT THE SELLING ORGANIZATION:
+  Company: {{orgIntelligence.company.name}}
+  Description: {{orgIntelligence.company.description}}
+  Mission: {{orgIntelligence.company.mission}}
+  Industry: {{orgIntelligence.company.industry}}
+  
+  KEY DIFFERENTIATORS:
+  {{#each orgIntelligence.differentiators}}
+  - {{this}}
+  {{/each}}
+  {{/if}}
+  
+  Core Analysis Areas:
+  - Message clarity and structure
+  - Relevance to recipient and context
+  - Momentum building and call-to-action strength
+  - Tone and professionalism
+  - Persuasion techniques and psychology
+  {{#if orgIntelligence}}
+  - Alignment with {{orgIntelligence.company.name}}'s messaging guidelines
+  - Value proposition integration
+  - Strategic narrative consistency
+  {{/if}}
+  
+  Coaching Guidelines:
+  - Provide specific, actionable suggestions
+  - Include rewritten examples when helpful
+  - Focus on outcome-oriented improvements
+  - Consider recipient perspective and context
+  - Balance between being concise and comprehensive
+  - Never criticize harshly; always be constructive
+  {{#if orgIntelligence}}
+  - Ensure all suggestions align with {{orgIntelligence.company.name}}'s tone and style
+  - Apply industry-specific best practices
+  {{/if}}
+userPrompt: |
+  Analyze the following email message and provide comprehensive coaching:
+
+  URL: {{url}}
+  Platform: {{platform}}
+  Page Type: {{pageType}}
+  Timestamp: {{timestamp}}
+  
+  Email Context:
+  {{#each fields}}
+  {{@key}}: {{this}}
+  {{/each}}
+  
+  Email Content:
+  {{visibleText}}
+  
+  {{#if history}}
+  Thread History:
+  {{#each history}}
+  - {{this.timestamp}}: {{this.sender}} - {{this.preview}}
+  {{/each}}
+  {{/if}}
+  
+  {{#if orgIntelligence}}
+  ===== ORGANIZATION INTELLIGENCE =====
+  
+  VALUE PROPOSITIONS TO LEVERAGE:
+  {{#each orgIntelligence.valueProps}}
+  - {{this.title}}: {{this.description}}
+  {{/each}}
+  
+  MESSAGING RULES:
+  Tone Guidelines: {{#each orgIntelligence.messagingRules.tone}}{{this}}. {{/each}}
+  Interaction Style: {{orgIntelligence.messagingRules.style}}
+  
+  Forbidden Phrases to Avoid:
+  {{#each orgIntelligence.messagingRules.forbidden}}
+  - "{{this}}"
+  {{/each}}
+  
+  Preferred Terms:
+  {{#each orgIntelligence.messagingRules.preferred}}
+  - Instead of "{{@key}}", use "{{this}}"
+  {{/each}}
+  
+  STRATEGIC NARRATIVES:
+  {{#each orgIntelligence.narratives}}
+  - {{this.title}}: Focus on {{#each this.pillars}}{{this}}, {{/each}}
+  {{/each}}
+  
+  TARGET PERSONAS & COMMUNICATION STYLES:
+  {{#each orgIntelligence.targetPersonas}}
+  - {{this.role}}: Prefers {{this.style}} communication
+    Goals: {{#each this.goals}}{{this}}, {{/each}}
+  {{/each}}
+  
+  COMMON OBJECTIONS & RESPONSES:
+  {{#each orgIntelligence.objections}}
+  - If they mention "{{this.objection}}", consider: {{this.response}}
+  {{/each}}
+  {{/if}}
+
+  Provide a detailed JSON analysis with this structure:
+  {
+    "clarityScore": 0-100,
+    "relevanceScore": 0-100,
+    "momentumScore": 0-100,
+    "overallScore": 0-100,
+    "analysis": {
+      "strengths": [
+        "specific strong points in the email"
+      ],
+      "weaknesses": [
+        "areas that need improvement"
+      ],
+      "tone": {
+        "current": "friendly|professional|formal|casual|urgent|passive",
+        "recommended": "suggested tone adjustment if needed",
+        "reasoning": "why this tone would be more effective"{{#if orgIntelligence}},
+        "brandAlignment": "how well it matches {{orgIntelligence.company.name}}'s tone",
+        "adjustmentsNeeded": ["specific brand tone adjustments"]{{/if}}
+      },
+      "structure": {
+        "opening": "analysis of the opening",
+        "body": "analysis of the main content",
+        "closing": "analysis of the closing and CTA",
+        "recommendations": ["specific structural improvements"]
+      }
+    },
+    "suggestions": [
+      {
+        "type": "clarity|relevance|momentum|tone|structure|value_prop|messaging",
+        "issue": "specific issue identified",
+        "suggestion": "how to fix this issue",
+        "impact": "high|medium|low",
+        "example": "optional example of improved text"{{#if orgIntelligence}},
+        "valueAlignment": "which value prop this reinforces",
+        "narrativeConnection": "relevant strategic narrative if applicable"{{/if}}
+      }
+    ],
+    "rewrittenExamples": [
+      {
+        "original": "problematic sentence or paragraph",
+        "improved": "rewritten version",
+        "explanation": "why this version is better"
+      }
+    ],
+    "psychologicalFactors": {
+      "reciprocity": "how well the email leverages reciprocity",
+      "urgency": "effectiveness of urgency creation",
+      "socialProof": "use of social proof elements",
+      "authority": "establishment of credibility",
+      "personalization": "level and effectiveness of personalization"
+    },
+    "callToAction": {
+      "exists": true|false,
+      "clarity": "clear|vague|missing",
+      "strength": "strong|moderate|weak",
+      "suggestions": ["how to improve the CTA"]
+    },
+    "recipientConsiderations": {
+      "likelyPriorities": ["what the recipient probably cares about"],
+      "potentialObjections": ["objections they might have"],
+      "engagementPrediction": "high|medium|low",
+      "responseStrategy": "recommended approach for follow-up"{{#if orgIntelligence}},
+      "personaMatch": "which buyer persona this recipient matches",
+      "recommendedMessaging": "messaging approach based on persona",
+      "valuePropAlignment": ["most relevant value props for this recipient"]{{/if}}
+    },
+    "subjectLine": {
+      "effectiveness": 0-100,
+      "openRate": "likely|unlikely|neutral",
+      "suggestions": ["alternative subject lines if needed"]
+    },
+    "nextSteps": [
+      {
+        "action": "specific next action",
+        "timing": "immediate|soon|later",
+        "rationale": "why this action matters"
+      }
+    ],
+    "templates": {
+      "followUp": "suggested follow-up template if no response",
+      "alternativeApproach": "different angle to try if needed"{{#if orgIntelligence}},
+      "valuePropositionEmail": "email template highlighting key value props",
+      "objectionHandling": "template addressing common objections"{{/if}}
+    }{{#if orgIntelligence}},
+    "orgIntelligenceInsights": {
+      "messagingCompliance": {
+        "score": 0-100,
+        "forbiddenPhrasesFound": ["any forbidden phrases used"],
+        "preferredTermsMissed": ["preferred terms that could be used"],
+        "toneAlignment": "excellent|good|needs_improvement"
+      },
+      "valuePropositionUsage": {
+        "mentioned": ["value props referenced"],
+        "opportunities": ["value props that could be added"],
+        "effectiveness": "strong|moderate|weak"
+      },
+      "strategicNarrativeAlignment": {
+        "currentNarrative": "which narrative is being used if any",
+        "recommendedNarrative": "best narrative for this context",
+        "integrationSuggestions": ["how to better integrate the narrative"]
+      }
+    }{{/if}}
+  }
+variables:
+  - url
+  - platform
+  - pageType
+  - fields
+  - visibleText
+  - history
+  - timestamp
+  - userContext
+  - orgIntelligence
+outputFormat: json
+retryPrompt: |
+  The previous analysis was incomplete or invalid. Please regenerate ensuring:
+  1. All scores are integers between 0-100
+  2. All required fields are present
+  3. Arrays contain meaningful, specific items
+  4. Suggestions are actionable and specific
+  5. Examples are relevant to the actual email content
+  
+  Reanalyze the email and provide complete JSON output.
+metadata:
+  schemaVersion: "2.0"
+  analysisType: "comprehensive"
+  focusAreas: ["clarity", "relevance", "momentum", "psychology"]
+  maxRetries: 2

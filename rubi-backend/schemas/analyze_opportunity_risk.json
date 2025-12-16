@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Opportunity Risk Analysis",
+  "type": "object",
+  "required": [
+    "riskLevel",
+    "riskScore",
+    "factors",
+    "recommendations",
+    "confidence"
+  ],
+  "properties": {
+    "riskLevel": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"]
+    },
+    "riskScore": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "factors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "description", "impact", "likelihood"],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": ["budget", "timeline", "stakeholder", "competition", "technical", "legal"]
+          },
+          "description": {
+            "type": "string"
+          },
+          "impact": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "likelihood": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "mitigation": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "keyMetrics": {
+      "type": "object",
+      "properties": {
+        "dealSize": {
+          "type": "number"
+        },
+        "probability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "daysInStage": {
+          "type": "number"
+        },
+        "nextSteps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "redFlags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "greenFlags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "competitiveAnalysis": {
+      "type": "object",
+      "properties": {
+        "hasCompetition": {
+          "type": "boolean"
+        },
+        "competitorStrength": {
+          "type": "string",
+          "enum": ["weak", "moderate", "strong"]
+        },
+        "differentiators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "stakeholderAnalysis": {
+      "type": "object",
+      "properties": {
+        "championIdentified": {
+          "type": "boolean"
+        },
+        "decisionMakerEngaged": {
+          "type": "boolean"
+        },
+        "buyingCommitteeSize": {
+          "type": "number"
+        }
+      }
+    },
+    "forecastConfidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "suggestedActions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action", "priority"],
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["immediate", "high", "medium", "low"]
+          },
+          "owner": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 75
+    }
+  }
+}

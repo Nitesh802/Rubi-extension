@@ -1,0 +1,234 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LinkedIn Profile Summary",
+  "type": "object",
+  "required": [
+    "summary",
+    "talkingPoints",
+    "engagementIdeas",
+    "risks",
+    "opportunities",
+    "toneProfile",
+    "profileStrength",
+    "keyInsights",
+    "commonGround"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "summary": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 500,
+      "description": "Executive summary of the person's professional profile"
+    },
+    "talkingPoints": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["topic", "opener", "relevance"],
+        "additionalProperties": false,
+        "properties": {
+          "topic": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 200
+          },
+          "opener": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          },
+          "relevance": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 200
+          }
+        }
+      }
+    },
+    "engagementIdeas": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "required": ["type", "content", "timing", "expectedOutcome"],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["comment", "message", "connection", "endorsement"]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          },
+          "timing": {
+            "type": "string",
+            "enum": ["immediate", "within_week", "long_term"]
+          },
+          "expectedOutcome": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 200
+          }
+        }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["type", "description", "mitigation"],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["professional", "communication", "timing"]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          },
+          "mitigation": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          }
+        }
+      }
+    },
+    "opportunities": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["type", "description", "actionPlan"],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["collaboration", "referral", "knowledge_share", "partnership"]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          },
+          "actionPlan": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 400
+          }
+        }
+      }
+    },
+    "toneProfile": {
+      "type": "object",
+      "required": ["formality", "communication", "interests", "values", "preferredChannels"],
+      "additionalProperties": false,
+      "properties": {
+        "formality": {
+          "type": "string",
+          "enum": ["casual", "professional", "executive"]
+        },
+        "communication": {
+          "type": "string",
+          "enum": ["brief", "detailed", "analytical"]
+        },
+        "interests": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          }
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          }
+        },
+        "preferredChannels": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          }
+        }
+      }
+    },
+    "profileStrength": {
+      "type": "object",
+      "required": ["score", "completeness", "credibility", "influence"],
+      "additionalProperties": false,
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "completeness": {
+          "type": "string",
+          "enum": ["basic", "moderate", "comprehensive"]
+        },
+        "credibility": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "influence": {
+          "type": "string",
+          "enum": ["local", "industry", "global"]
+        }
+      }
+    },
+    "keyInsights": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 300
+      }
+    },
+    "commonGround": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 5,
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 200
+      }
+    },
+    "analyzedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "profileUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "platform": {
+      "type": "string"
+    }
+  }
+}

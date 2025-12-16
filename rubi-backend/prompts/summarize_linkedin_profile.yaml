@@ -1,0 +1,130 @@
+id: summarize_linkedin_profile
+version: "2.0.0"
+name: LinkedIn Profile Summary
+description: Generates comprehensive LinkedIn profile summary with talking points and engagement strategies
+author: Rubi AI Team
+createdAt: "2024-01-01T00:00:00Z"
+updatedAt: "2024-11-27T00:00:00Z"
+model:
+  provider: anthropic
+  name: claude-3-sonnet-20240229
+  temperature: 0.7
+  maxTokens: 2000
+  topP: 0.95
+  fallbackProviders:
+    - provider: openai
+      name: gpt-4-turbo-preview
+    - provider: google
+      name: gemini-2.0-pro
+systemPrompt: |
+  You are an expert LinkedIn profile analyst specializing in professional networking and engagement strategies.
+  Your analysis should be actionable, data-driven, and focused on creating meaningful professional connections.
+  Provide insights that help users engage effectively with the profile owner.
+  
+  Guidelines:
+  - Be concise but comprehensive
+  - Focus on actionable insights
+  - Identify conversation starters and common ground
+  - Assess professional credibility and expertise areas
+  - Suggest engagement strategies based on profile content
+  - Never make assumptions beyond provided data
+  - Maintain professional tone throughout
+userPrompt: |
+  Analyze the following LinkedIn profile and provide a comprehensive summary with engagement strategies:
+
+  Profile URL: {{url}}
+  Platform: {{platform}}
+  Page Type: {{pageType}}
+  Current Timestamp: {{timestamp}}
+  
+  Profile Fields:
+  {{#each fields}}
+  - {{@key}}: {{this}}
+  {{/each}}
+  
+  Visible Text Content:
+  {{visibleText}}
+  
+  {{#if history}}
+  Previous Interactions:
+  {{#each history}}
+  - {{this.timestamp}}: {{this.action}} - {{this.detail}}
+  {{/each}}
+  {{/if}}
+
+  Generate a JSON response with this exact structure:
+  {
+    "summary": "2-3 sentence executive summary of the person's professional profile",
+    "talkingPoints": [
+      {
+        "topic": "specific conversation topic",
+        "opener": "suggested opening line or question",
+        "relevance": "why this topic matters for engagement"
+      }
+    ],
+    "engagementIdeas": [
+      {
+        "type": "comment|message|connection|endorsement",
+        "content": "specific action to take",
+        "timing": "immediate|within_week|long_term",
+        "expectedOutcome": "what this engagement might achieve"
+      }
+    ],
+    "risks": [
+      {
+        "type": "professional|communication|timing",
+        "description": "potential risk or concern",
+        "mitigation": "how to address this risk"
+      }
+    ],
+    "opportunities": [
+      {
+        "type": "collaboration|referral|knowledge_share|partnership",
+        "description": "specific opportunity identified",
+        "actionPlan": "steps to pursue this opportunity"
+      }
+    ],
+    "toneProfile": {
+      "formality": "casual|professional|executive",
+      "communication": "brief|detailed|analytical",
+      "interests": ["interest1", "interest2"],
+      "values": ["value1", "value2"],
+      "preferredChannels": ["LinkedIn message", "email", "etc"]
+    },
+    "profileStrength": {
+      "score": 0-100,
+      "completeness": "basic|moderate|comprehensive",
+      "credibility": "low|medium|high",
+      "influence": "local|industry|global"
+    },
+    "keyInsights": [
+      "unique insight about this person's career trajectory or expertise"
+    ],
+    "commonGround": [
+      "shared connection, interest, or experience that could facilitate engagement"
+    ]
+  }
+variables:
+  - url
+  - platform
+  - pageType
+  - fields
+  - visibleText
+  - history
+  - timestamp
+  - userContext
+outputFormat: json
+retryPrompt: |
+  The previous output was invalid or incomplete. Please regenerate the response ensuring:
+  1. Valid JSON syntax with all required fields
+  2. All arrays contain at least one meaningful item
+  3. All string fields are non-empty
+  4. Numerical scores are within specified ranges
+  5. Enum values match exactly (case-sensitive)
+  
+  Focus on accuracy and completeness while maintaining the exact schema structure.
+metadata:
+  schemaVersion: "2.0"
+  requiredContextFields: ["url", "platform"]
+  maxRetries: 2
+  cacheDuration: 3600

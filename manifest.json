@@ -1,0 +1,99 @@
+{
+  "manifest_version": 3,
+  "name": "Rubi Browser Extension",
+  "version": "0.1.0",
+  "description": "In-the-flow-of-work intelligence assistant for sales teams",
+
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+
+  "host_permissions": [
+    "<all_urls>"
+  ],
+
+  "background": {
+    "service_worker": "background/worker.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "utils/messaging.js",
+        "utils/platformDetector.js",
+        "utils/contextHelpers.js",
+        "utils/contextPayload.js",
+        "utils/memoryStore.js",
+        "utils/orgIntelligence.js",
+        "utils/contextBridge.js",
+        "utils/sessionBridge.js",
+        "utils/backendClient.js",
+        "utils/configBridge.js",
+        "actions/actionsUtils.js",
+        "actions/stubs.js",
+        "actions/actionsRegistry.js",
+        "actions/actionsRouter.js",
+        "utils/salesforceSelectorMap.js",
+        "utils/salesforceExtractor.js",
+        "utils/linkedinSelectorMap.js",
+        "utils/linkedinExtractor.js",
+        "utils/selectorMaps.js",
+        "utils/contextExtractor.js",
+        "drawer/microcopy.js",
+        "utils/componentRegistry.js",
+        "drawer/componentRegistry.js",
+        "drawer/layoutTemplates.js",
+        "drawer/experienceConfigs.js",
+        "drawer/actionComponentMapper.js",
+        "drawer/componentRenderer.js",
+        "drawer/drawer.js",
+        "content/drawerInit.js",
+        "content/injector.js",
+        "panel/panel.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "drawer/drawer.html",
+        "drawer/drawer.css",
+        "drawer/drawer.js",
+        "drawer/drawerInit.js",
+        "drawer/microcopy.js",
+        "drawer/componentRegistry.js",
+        "drawer/experienceConfigs.js",
+        "drawer/actionComponentMapper.js",
+        "drawer/componentRenderer.js",
+        "drawer/layoutTemplates.js",
+        "utils/componentRegistry.js",
+        "bubble/bubble.html",
+        "bubble/bubble.css",
+        "panel/panel.html",
+        "panel/panel.css",
+        "panel/panel.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+
+  "action": {
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    },
+    "default_title": "Open Rubi Assistant"
+  }
+}

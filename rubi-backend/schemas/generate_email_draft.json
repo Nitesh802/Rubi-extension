@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Email Draft Generation",
+  "type": "object",
+  "required": ["subject", "body", "tone", "structure"],
+  "properties": {
+    "subject": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 100
+    },
+    "body": {
+      "type": "string",
+      "minLength": 20
+    },
+    "tone": {
+      "type": "string",
+      "enum": ["formal", "casual", "friendly", "professional", "urgent", "informative"]
+    },
+    "structure": {
+      "type": "object",
+      "required": ["greeting", "opening", "mainContent", "closing", "signature"],
+      "properties": {
+        "greeting": {
+          "type": "string"
+        },
+        "opening": {
+          "type": "string"
+        },
+        "mainContent": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "closing": {
+          "type": "string"
+        },
+        "signature": {
+          "type": "string"
+        }
+      }
+    },
+    "alternatives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "opening": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "wordCount": {
+          "type": "number"
+        },
+        "readingTime": {
+          "type": "string"
+        },
+        "formalityLevel": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10
+        }
+      }
+    }
+  }
+}

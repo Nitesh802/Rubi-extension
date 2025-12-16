@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Email Message Analysis",
+  "type": "object",
+  "required": ["tone", "clarity", "professionalism", "suggestions", "overallScore"],
+  "properties": {
+    "tone": {
+      "type": "object",
+      "required": ["primary", "secondary", "appropriateness"],
+      "properties": {
+        "primary": {
+          "type": "string",
+          "enum": ["formal", "casual", "friendly", "assertive", "neutral", "urgent"]
+        },
+        "secondary": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "appropriateness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "clarity": {
+      "type": "object",
+      "required": ["score", "issues"],
+      "properties": {
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "professionalism": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "suggestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "suggestion"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["grammar", "tone", "structure", "content", "clarity"]
+          },
+          "suggestion": {
+            "type": "string"
+          },
+          "example": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "keyPoints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "callToAction": {
+      "type": "object",
+      "properties": {
+        "present": {
+          "type": "boolean"
+        },
+        "clarity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "overallScore": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "rewriteSuggestion": {
+      "type": "string"
+    }
+  }
+}

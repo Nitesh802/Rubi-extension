@@ -1,0 +1,298 @@
+RUBI AI BACKEND FIRST DEPLOYMENT WALKTHROUGH
+
+This guide walks you through deploying the Rubi AI Backend from development to production, then connecting and verifying the browser extension integration.
+
+PHASE 1: LOCAL VERIFICATION
+============================
+
+1. Clone and Setup Repository
+   cd rubi-backend
+   npm install
+   cp .env.example .env.local
+
+2. Configure Local Environment
+   Edit .env.local and set:
+   - OPENAI_API_KEY with your OpenAI key
+   - ANTHROPIC_API_KEY with your Anthropic key (optional)
+   - GOOGLE_API_KEY with your Google AI key (optional)
+   - Keep MOODLE_CONFIG_ENABLED=false for initial testing
+
+3. Create Organization Configuration
+   mkdir -p org-config/organizations
+   Create org-config/organizations/default.yaml:
+   
+   id: default
+   name: Default Organization
+   settings:
+     enabledActions:
+       - generate-email
+       - extract-action-items
+       - analyze-email
+     maxTokensPerRequest: 4000
+     maxRequestsPerDay: 1000
+   intelligence:
+     industry: Technology
+     tone: professional
+     specialInstructions: Be concise and actionable
+
+4. Build and Start Locally
+   npm run build
+   npm run start:dev
+   
+   Verify:
+   - Server starts on port 3000
+   - No errors in console
+   - Health check: curl http://localhost:3000/health
+   - Ready check: curl http://localhost:3000/ready
+
+PHASE 2: STAGING DEPLOYMENT
+============================
+
+Option A: Deploy to Vercel (Recommended for Quick Start)
+---------------------------------------------------------
+1. Install Vercel CLI
+   npm install -g vercel
+
+2. Login to Vercel
+   vercel login
+
+3. Configure Vercel Secrets
+   vercel secrets add rubi-app-base-url "https://your-staging-url.vercel.app"
+   vercel secrets add rubi-node-env "staging"
+   vercel secrets add rubi-log-level "info"
+   vercel secrets add rubi-jwt-secret "$(openssl rand -base64 64)"
+   vercel secrets add rubi-admin-jwt-secret "$(openssl rand -base64 64)"
+   vercel secrets add rubi-openai-api-key "your-openai-key"
+   vercel secrets add rubi-anthropic-api-key "your-anthropic-key"
+   vercel secrets add rubi-google-api-key "your-google-key"
+   vercel secrets add rubi-moodle-base-url "https://your-moodle.com"
+   vercel secrets add rubi-moodle-config-api-token "your-moodle-token"
+   vercel secrets add rubi-moodle-config-enabled "false"
+   vercel secrets add rubi-moodle-identity-jwt-secret "$(openssl rand -base64 64)"
+   vercel secrets add rubi-moodle-config-timeout "30000"
+   vercel secrets add rubi-provider-primary "openai"
+   vercel secrets add rubi-provider-fallbacks "anthropic,google"
+   vercel secrets add rubi-rate-limit-max "200"
+   vercel secrets add rubi-rate-limit-window "60000"
+   vercel secrets add rubi-cors-allowed-origins "https://linkedin.com,https://www.linkedin.com,https://salesforce.com,https://login.salesforce.com"
+
+4. Deploy to Staging
+   vercel --env-file .env.staging
+   
+   Note the URL provided (e.g., https://rubi-backend-staging-xxx.vercel.app)
+
+5. Verify Staging Deployment
+   curl https://your-staging-url.vercel.app/health
+   curl https://your-staging-url.vercel.app/ready
+
+Option B: Deploy to Fly.io
+---------------------------
+1. Install Fly CLI
+   curl -L https://fly.io/install.sh | sh
+
+2. Login to Fly
+   fly auth login
+
+3. Create Fly App
+   fly apps create rubi-backend-staging
+
+4. Set Secrets
+   fly secrets set JWT_SECRET="$(openssl rand -base64 64)"
+   fly secrets set ADMIN_JWT_SECRET="$(openssl rand -base64 64)"
+   fly secrets set OPENAI_API_KEY="your-key"
+   fly secrets set ANTHROPIC_API_KEY="your-key"
+   fly secrets set GOOGLE_API_KEY="your-key"
+   fly secrets set APP_BASE_URL="https://rubi-backend-staging.fly.dev"
+   fly secrets set MOODLE_BASE_URL="https://your-moodle.com"
+   fly secrets set MOODLE_CONFIG_API_TOKEN="your-token"
+   fly secrets set MOODLE_IDENTITY_JWT_SECRET="$(openssl rand -base64 64)"
+
+5. Deploy
+   fly deploy --config fly.toml
+
+6. Verify
+   fly status
+   curl https://rubi-backend-staging.fly.dev/health
+
+PHASE 3: BROWSER EXTENSION CONNECTION (STAGING)
+================================================
+
+1. Configure Extension for Staging
+   In browser extension manifest.json, update:
+   
+   "host_permissions": [
+     "https://your-staging-backend-url.vercel.app/*"
+   ]
+
+2. Update Extension Backend URL
+   In extension's utils/backendClient.js or config:
+   
+   const BACKEND_URL = 'https://your-staging-backend-url.vercel.app';
+
+3. Load Extension in Browser
+   - Chrome: chrome://extensions/
+   - Enable Developer mode
+   - Load unpacked -> select extension directory
+   - Note the Extension ID
+
+4. Test Extension Connection
+   - Navigate to LinkedIn or Salesforce
+   - Open extension popup
+   - Check browser console for connection logs
+   - Verify no CORS errors
+
+5. Test Basic Action
+   - Select text on LinkedIn/Salesforce page
+   - Right-click -> Rubi Actions
+   - Select "Extract Action Items"
+   - Verify response received
+
+PHASE 4: PRODUCTION DEPLOYMENT
+===============================
+
+1. Update Production Environment Variables
+   Copy .env.staging to .env.production
+   Update:
+   - APP_BASE_URL to production URL
+   - NODE_ENV=production
+   - LOG_LEVEL=warn
+   - Ensure all secrets are production-specific
+
+2. Deploy to Production (Vercel)
+   vercel --prod
+
+3. Deploy to Production (Fly.io)
+   fly apps create rubi-backend-prod
+   fly secrets import < .env.production
+   fly deploy --config fly.toml --app rubi-backend-prod
+
+4. Configure DNS (if using custom domain)
+   - Point your domain to deployment platform
+   - Configure SSL certificate
+   - Update APP_BASE_URL environment variable
+
+5. Production Health Checks
+   curl https://api.your-domain.com/health
+   curl https://api.your-domain.com/ready
+
+PHASE 5: EXTENSION PRODUCTION RELEASE
+======================================
+
+1. Update Extension for Production
+   manifest.json:
+   "host_permissions": [
+     "https://api.your-domain.com/*"
+   ]
+   
+   Update BACKEND_URL in config
+
+2. Test Production Extension
+   - Load updated extension
+   - Test on LinkedIn profile page
+   - Test on Salesforce opportunity page
+   - Verify all actions working
+
+3. Package Extension for Distribution
+   - Remove development files
+   - Create ZIP file of extension
+   - Submit to Chrome Web Store (if applicable)
+
+PHASE 6: VERIFICATION AND MONITORING
+=====================================
+
+1. End-to-End Test Sequence
+   a. Open LinkedIn profile
+   b. Activate extension
+   c. Extract context
+   d. Generate email draft
+   e. Verify response quality
+   
+2. Check Logs
+   Vercel: vercel logs --prod
+   Fly: fly logs
+   
+3. Monitor Key Metrics
+   - Response times < 3 seconds
+   - Error rate < 1%
+   - Token usage within limits
+   - No memory leaks
+
+4. Test Fallback Scenarios
+   - Temporarily invalidate primary provider key
+   - Verify fallback to secondary provider
+   - Check error handling
+
+TROUBLESHOOTING COMMON ISSUES
+==============================
+
+Issue: CORS errors in browser
+Solution: Verify CORS_ALLOWED_ORIGINS includes all necessary domains
+         Check browser extension manifest permissions
+
+Issue: Authentication failures
+Solution: Verify JWT_SECRET is set correctly
+         Check token expiration settings
+         Ensure extension sending auth headers
+
+Issue: Provider errors
+Solution: Verify API keys are valid
+         Check rate limits not exceeded
+         Test provider directly with curl
+
+Issue: Slow responses
+Solution: Check provider latency
+         Verify caching working
+         Review token limits per request
+
+Issue: Extension not showing actions
+Solution: Check backend /api/actions endpoint
+         Verify org config has enabled actions
+         Check browser console for errors
+
+ROLLBACK PROCEDURE
+==================
+
+If issues occur in production:
+
+1. Immediate Rollback (Vercel)
+   vercel rollback
+
+2. Immediate Rollback (Fly)
+   fly releases
+   fly deploy --image registry.fly.io/rubi-backend:v[previous-version]
+
+3. Fix Issues in Staging
+   - Deploy fix to staging first
+   - Thoroughly test
+   - Deploy to production
+
+4. Post-Mortem
+   - Document what went wrong
+   - Update deployment checklist
+   - Add tests for the issue
+
+SUCCESS CRITERIA
+================
+
+Your deployment is successful when:
+- Health and ready endpoints return 200
+- Extension connects without CORS errors
+- Actions execute and return results
+- Response times are under 3 seconds
+- No critical errors in logs
+- Token usage tracked correctly
+- Fallback providers work when primary fails
+- All organization configurations loaded
+- Rate limiting functioning correctly
+
+NEXT STEPS
+==========
+
+After successful deployment:
+1. Set up monitoring dashboards
+2. Configure alerting for errors
+3. Document API for other consumers
+4. Plan for scaling if needed
+5. Schedule regular security audits
+6. Implement backup procedures
+7. Train support team on troubleshooting

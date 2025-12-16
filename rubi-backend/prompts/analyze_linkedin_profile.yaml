@@ -1,0 +1,118 @@
+id: analyze_linkedin_profile
+version: "1.1.0"
+name: LinkedIn Profile Analysis with Org Intelligence
+description: Analyzes a LinkedIn profile to extract insights and provide personalized outreach recommendations
+author: Rubi AI Team
+createdAt: "2024-01-01T00:00:00Z"
+updatedAt: "2024-01-15T00:00:00Z"
+model:
+  provider: openai
+  name: gpt-4-turbo-preview
+  temperature: 0.6
+  maxTokens: 1500
+  topP: 0.9
+systemPrompt: |
+  You are an expert LinkedIn profile analyzer and B2B sales strategist. Your task is to analyze LinkedIn profiles 
+  and provide valuable insights about the person's professional background, skills, and potential opportunities.
+  You will also provide personalized outreach recommendations based on the selling organization's value propositions
+  and ideal customer profile. Always provide accurate, professional, and constructive analysis.
+  
+  {{#if orgIntelligence}}
+  ABOUT THE SELLING ORGANIZATION:
+  Company: {{orgIntelligence.company.name}}
+  Description: {{orgIntelligence.company.description}}
+  Industry: {{orgIntelligence.company.industry}}
+  {{/if}}
+userPrompt: |
+  Analyze the following LinkedIn profile data and provide insights:
+
+  Profile URL: {{url}}
+  Platform: {{platform}}
+  
+  Profile Data:
+  {{context.data}}
+
+  {{#if orgIntelligence}}
+  ===== ORGANIZATION CONTEXT =====
+  
+  VALUE PROPOSITIONS:
+  {{#each orgIntelligence.valueProps}}
+  - {{this.title}}: {{this.description}}
+    Key Metrics: {{#each this.metrics}}{{this}}, {{/each}}
+  {{/each}}
+  
+  TARGET ICP:
+  Industries: {{#each orgIntelligence.icp.industries}}{{this}}, {{/each}}
+  Roles: {{#each orgIntelligence.icp.roles}}{{this}}, {{/each}}
+  Pain Points: {{#each orgIntelligence.icp.painPoints}}{{this}}, {{/each}}
+  Buying Triggers: {{#each orgIntelligence.icp.triggers}}{{this}}, {{/each}}
+  
+  RELEVANT PERSONAS:
+  {{#each orgIntelligence.targetPersonas}}
+  - {{this.role}}: Goals include {{#each this.goals}}{{this}}, {{/each}}
+    Communication style: {{this.style}}
+  {{/each}}
+  
+  MESSAGING GUIDELINES:
+  Tone: {{#each orgIntelligence.messagingRules.tone}}{{this}}. {{/each}}
+  Interaction Style: {{orgIntelligence.messagingRules.style}}
+  {{/if}}
+
+  Please analyze this profile and return a JSON object with the following structure:
+  {
+    "summary": "A brief 2-3 sentence professional summary",
+    "keyStrengths": ["strength1", "strength2", "strength3"],
+    "experience": {
+      "totalYears": number,
+      "industries": ["industry1", "industry2"],
+      "currentRole": "current position title",
+      "seniority": "entry|mid|senior|executive"
+    },
+    "skills": {
+      "technical": ["skill1", "skill2"],
+      "soft": ["skill1", "skill2"],
+      "certifications": ["cert1", "cert2"]
+    },
+    "fitScore": {
+      "overall": number (0-100),
+      "roleMatch": "exact|close|partial|none",
+      "industryMatch": "exact|close|partial|none",
+      "seniorityMatch": "exact|close|partial|none",
+      "explanation": "brief explanation of fit assessment"
+    },
+    "personalizedOutreach": {
+      "recommendedApproach": "specific outreach strategy tailored to this person",
+      "valuePropsToHighlight": ["relevant value prop 1", "relevant value prop 2"],
+      "painPointsToAddress": ["likely pain point 1", "likely pain point 2"],
+      "openingLineOptions": [
+        "personalized opening line option 1",
+        "personalized opening line option 2"
+      ],
+      "callToAction": "specific next step recommendation"
+    },
+    "recommendations": [
+      {
+        "type": "outreach|qualification|research",
+        "suggestion": "specific recommendation",
+        "priority": "high|medium|low"
+      }
+    ],
+    "networkingTips": ["tip1", "tip2"],
+    "profileCompleteness": number (0-100),
+    "industryInsights": "relevant industry trends or opportunities",
+    "warningFlags": ["any red flags or concerns", "if applicable"]
+  }
+  
+  {{#if orgIntelligence}}
+  IMPORTANT: Ensure your outreach suggestions align with {{orgIntelligence.company.name}}'s messaging guidelines 
+  and avoid these forbidden phrases: {{#each orgIntelligence.messagingRules.forbidden}}{{this}}, {{/each}}
+  {{/if}}
+variables:
+  - url
+  - platform
+  - context.data
+  - orgIntelligence
+outputFormat: json
+retryPrompt: |
+  The previous output was not valid JSON. Please correct it and ensure all required fields are present.
+  Focus on providing a valid JSON structure matching the schema exactly.

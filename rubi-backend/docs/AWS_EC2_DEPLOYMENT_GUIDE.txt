@@ -1,0 +1,915 @@
+RUBI AI BACKEND AWS EC2 DEPLOYMENT GUIDE
+=========================================
+Generated: December 2025
+Target Domain: ai.fus-ed.com
+Environment: Production
+
+===============================================================================
+1. EC2 DEPLOYMENT PLAN (HIGH-LEVEL)
+===============================================================================
+
+PHASE 1: EC2 INSTANCE SETUP
+----------------------------
+1.1 Launch EC2 Instance
+- AMI: Ubuntu 22.04 LTS (ami-0c94855ba95c574c8 or latest)
+- Instance Type: t3.medium (2 vCPU, 4 GB RAM) for pilot, upgrade to t3.large/xlarge as needed
+- VPC: Default VPC or custom VPC with public subnet
+- Security Group: Create "rubi-backend-sg" with:
+  - Port 22 (SSH) from your IP
+  - Port 80 (HTTP) from 0.0.0.0/0  
+  - Port 443 (HTTPS) from 0.0.0.0/0
+  - Port 3000 (Node) from security group self-reference only (internal)
+- Key Pair: Create or use existing key pair for SSH access
+- Storage: 20 GB gp3 SSD (expandable as needed)
+- Tags: Name=rubi-backend-prod, Environment=production, Application=rubi-ai
+
+1.2 Configure DNS
+- Route 53 or external DNS provider
+- Create A record: ai.fus-ed.com → EC2 Elastic IP
+- Allocate and associate Elastic IP to instance for static addressing
+
+PHASE 2: SYSTEM DEPENDENCIES
+-----------------------------
+2.1 Initial SSH and System Update
+ssh -i your-key.pem ubuntu@<elastic-ip>
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y build-essential curl git vim
+
+2.2 Install Node.js 20.x LTS via NodeSource
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+node --version  # Verify v20.x
+npm --version   # Verify 10.x
+
+2.3 Install PM2 Process Manager
+sudo npm install -g pm2
+pm2 --version  # Verify installation
+
+2.4 Install Nginx
+sudo apt install -y nginx
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+2.5 Install Certbot for Let's Encrypt
+sudo apt install -y certbot python3-certbot-nginx
+
+2.6 Install Additional Tools
+sudo apt install -y htop unzip jq
+
+PHASE 3: APPLICATION DEPLOYMENT
+--------------------------------
+3.1 Create Application User and Directory
+sudo useradd -m -s /bin/bash rubiapp
+sudo mkdir -p /opt/rubi-backend
+sudo chown rubiapp:rubiapp /opt/rubi-backend
+
+3.2 Clone Repository (as rubiapp user)
+sudo su - rubiapp
+cd /opt/rubi-backend
+git clone https://github.com/your-org/rubi-backend.git .
+# OR if using deploy keys/tokens:
+git clone https://<token>@github.com/your-org/rubi-backend.git .
+
+3.3 Install Dependencies and Build
+npm ci --production=false  # Install all deps including devDeps for build
+npm run build  # Compiles TypeScript to dist/
+npm prune --production  # Remove devDeps after build
+
+3.4 Configure Environment Variables
+cp .env.production.example .env.production
+vim .env.production  # Edit with production values (see Section 2)
+chmod 600 .env.production  # Secure the file
+
+PHASE 4: PM2 CONFIGURATION
+---------------------------
+4.1 Create PM2 Ecosystem File
+Create /opt/rubi-backend/ecosystem.config.js (see Section 4)
+
+4.2 Start Application with PM2
+pm2 start ecosystem.config.js --env production
+pm2 save  # Save current process list
+pm2 logs rubi-backend  # View logs
+
+4.3 Setup PM2 Startup Script (as ubuntu user)
+exit  # Exit rubiapp user
+sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u rubiapp --hp /home/rubiapp
+sudo systemctl enable pm2-rubiapp
+
+PHASE 5: NGINX CONFIGURATION
+-----------------------------
+5.1 Configure Nginx Site
+sudo vim /etc/nginx/sites-available/ai.fus-ed.com  # Add config from Section 3
+sudo ln -s /etc/nginx/sites-available/ai.fus-ed.com /etc/nginx/sites-enabled/
+sudo nginx -t  # Test configuration
+sudo systemctl reload nginx
+
+5.2 Obtain SSL Certificate
+sudo certbot --nginx -d ai.fus-ed.com --non-interactive --agree-tos --email your-email@fus-ed.com
+sudo systemctl reload nginx
+
+5.3 Setup Auto-renewal
+sudo certbot renew --dry-run  # Test renewal
+# Cron job is automatically added by certbot
+
+PHASE 6: SECURITY HARDENING
+----------------------------
+6.1 Configure UFW Firewall
+sudo ufw default deny incoming
+sudo ufw default allow outgoing  
+sudo ufw allow ssh
+sudo ufw allow http
+sudo ufw allow https
+sudo ufw --force enable
+
+6.2 Fail2ban for SSH Protection
+sudo apt install -y fail2ban
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+
+6.3 Unattended Upgrades
+sudo apt install -y unattended-upgrades
+sudo dpkg-reconfigure --priority=low unattended-upgrades
+
+PHASE 7: MONITORING SETUP
+-------------------------
+7.1 CloudWatch Agent (Optional)
+wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+sudo dpkg -i amazon-cloudwatch-agent.deb
+# Configure with wizard or config file
+
+7.2 PM2 Monitoring
+pm2 install pm2-logrotate
+pm2 set pm2-logrotate:max_size 50M
+pm2 set pm2-logrotate:retain 10
+
+PHASE 8: INTEGRATION POINTS
+----------------------------
+8.1 Moodle Integration
+The backend expects to communicate with Moodle at:
+- Config endpoint: https://sales.multi.rubi.digital/local/rubi_ai_admin/api/config.php
+- Identity endpoint: https://sales.multi.rubi.digital/local/rubi_ai_admin/api/identity.php
+
+Verify these are accessible from EC2:
+curl -H "X-API-Token: your-moodle-api-token" https://sales.multi.rubi.digital/local/rubi_ai_admin/api/config.php?orgid=fused
+
+8.2 Browser Extension Configuration
+Extension should be configured with:
+- Backend URL: https://ai.fus-ed.com
+- Ensure extension manifest allows connections to ai.fus-ed.com
+
+===============================================================================
+2. ENVIRONMENT VARIABLES AND .ENV.PRODUCTION TEMPLATE
+===============================================================================
+
+Create /opt/rubi-backend/.env.production with the following content:
+
+# Node Environment
+NODE_ENV=production
+PORT=3000
+
+# Application URLs
+BASE_URL=https://ai.fus-ed.com
+APP_BASE_URL=https://ai.fus-ed.com
+
+# Frontend Origins (for CORS)
+# Include Moodle/Rubi domain, Chrome extension origins, and any other allowed origins
+FRONTEND_ORIGINS=https://sales.multi.rubi.digital,chrome-extension://*
+CORS_ALLOWED_ORIGINS=https://sales.multi.rubi.digital,chrome-extension://*
+
+# Moodle Configuration
+# Base URL of your Moodle/Rubi installation
+MOODLE_BASE_URL=https://sales.multi.rubi.digital
+
+# API token for backend to authenticate to Moodle config endpoint
+MOODLE_CONFIG_API_TOKEN=your-secure-moodle-api-token-here
+
+# Enable/disable Moodle config fetching
+MOODLE_CONFIG_ENABLED=true
+
+# Shared secret for validating JWTs from Moodle identity endpoint
+MOODLE_IDENTITY_JWT_SECRET=your-shared-jwt-secret-with-moodle
+
+# Moodle config cache TTL in seconds (300 = 5 minutes)
+MOODLE_CONFIG_CACHE_TTL=300
+
+# LLM Provider API Keys
+# OpenAI Configuration
+OPENAI_API_KEY=sk-your-openai-api-key-here
+OPENAI_MODEL_DEFAULT=gpt-4-turbo-preview
+OPENAI_MAX_TOKENS=4000
+OPENAI_TEMPERATURE=0.7
+
+# Anthropic Configuration  
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-api-key-here
+ANTHROPIC_MODEL_DEFAULT=claude-3-opus-20240229
+ANTHROPIC_MAX_TOKENS=4000
+
+# Google Gemini Configuration
+GOOGLE_API_KEY=your-google-gemini-api-key-here
+GOOGLE_MODEL_DEFAULT=gemini-1.5-pro
+GOOGLE_MAX_TOKENS=4000
+
+# Provider Orchestration
+# Primary provider for most requests
+PROVIDER_PRIMARY=anthropic
+
+# Comma-separated list of fallback providers
+PROVIDER_FALLBACKS=openai,google
+
+# Provider retry configuration
+PROVIDER_MAX_RETRIES=3
+PROVIDER_RETRY_DELAY=1000
+
+# Extension Authentication
+# JWT secret for extension handshake/session tokens
+EXTENSION_JWT_SECRET=your-extension-jwt-secret-here
+
+# Extension session TTL in seconds (3600 = 1 hour)
+EXTENSION_SESSION_TTL=3600
+
+# Admin Authentication
+# Admin panel JWT secret
+ADMIN_JWT_SECRET=your-admin-jwt-secret-here
+
+# Admin users (comma-separated emails)
+ADMIN_ALLOWED_USERS=admin@fus-ed.com,support@fus-ed.com
+
+# Logging Configuration
+LOG_LEVEL=info
+LOG_FORMAT=json
+LOG_DIR=/opt/rubi-backend/logs
+
+# Enable detailed LLM usage logging
+LLM_USAGE_LOGGING_ENABLED=true
+LLM_USAGE_LOG_FILE=/opt/rubi-backend/logs/llm-usage.log
+
+# Rate Limiting
+# Max requests per window
+RATE_LIMIT_MAX=100
+
+# Rate limit window in milliseconds (60000 = 1 minute)
+RATE_LIMIT_WINDOW=60000
+
+# Skip rate limiting for these IPs (comma-separated)
+RATE_LIMIT_SKIP_IPS=
+
+# Security Headers
+# Content Security Policy
+CSP_ENABLED=true
+CSP_REPORT_ONLY=false
+
+# HSTS max age in seconds (31536000 = 1 year)
+HSTS_MAX_AGE=31536000
+
+# Organization Intelligence
+# Path to org intelligence JSON files
+ORG_INTELLIGENCE_PATH=/opt/rubi-backend/org-intelligence
+
+# Enable org intelligence features
+ORG_INTELLIGENCE_ENABLED=true
+
+# Default organization ID
+DEFAULT_ORG_ID=fused
+
+# Usage Limits
+# Global daily limit per org
+USAGE_LIMIT_DAILY_GLOBAL=10000
+
+# Per-action limits (can be overridden in org config)
+USAGE_LIMIT_ANALYZE_LINKEDIN=100
+USAGE_LIMIT_ANALYZE_OPPORTUNITY=50
+USAGE_LIMIT_ANALYZE_EMAIL=200
+USAGE_LIMIT_DASHBOARD_INSIGHTS=50
+
+# Cache Configuration
+# Redis connection (if using Redis for caching)
+# REDIS_URL=redis://localhost:6379
+
+# In-memory cache settings
+CACHE_ENABLED=true
+CACHE_TTL_DEFAULT=300
+CACHE_MAX_SIZE_MB=100
+
+# Metrics and Monitoring
+# Enable Prometheus metrics endpoint
+METRICS_ENABLED=true
+METRICS_PORT=9090
+
+# DataDog APM (if using)
+# DD_AGENT_HOST=localhost
+# DD_TRACE_AGENT_PORT=8126
+# DD_SERVICE=rubi-backend
+# DD_ENV=production
+
+# Feature Flags
+FEATURE_BROWSER_EXTENSION_ENABLED=true
+FEATURE_MOODLE_INTEGRATION_ENABLED=true
+FEATURE_ADMIN_PANEL_ENABLED=true
+FEATURE_ORG_INTELLIGENCE_ENABLED=true
+
+# Debug Settings (set to false in production)
+DEBUG_MODE=false
+DEBUG_LOG_REQUESTS=false
+DEBUG_LOG_RESPONSES=false
+
+===============================================================================
+3. NGINX CONFIGURATION FOR ai.fus-ed.com
+===============================================================================
+
+Create /etc/nginx/sites-available/ai.fus-ed.com:
+
+# Redirect HTTP to HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ai.fus-ed.com;
+    
+    # Let's Encrypt challenge location
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    
+    # Redirect all other traffic to HTTPS
+    location / {
+        return 301 https://$server_name$request_uri;
+    }
+}
+
+# HTTPS Server Block
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name ai.fus-ed.com;
+    
+    # SSL Configuration (managed by Certbot)
+    ssl_certificate /etc/letsencrypt/live/ai.fus-ed.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/ai.fus-ed.com/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    
+    # SSL Security Headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    
+    # Logging
+    access_log /var/log/nginx/ai.fus-ed.com.access.log;
+    error_log /var/log/nginx/ai.fus-ed.com.error.log;
+    
+    # Request body size limit for AI payloads
+    client_max_body_size 10M;
+    
+    # Timeouts for long-running AI requests
+    proxy_connect_timeout 30s;
+    proxy_send_timeout 120s;
+    proxy_read_timeout 120s;
+    send_timeout 120s;
+    
+    # CORS Headers (handled by backend, but adding support headers)
+    # These will be overridden by the backend's CORS middleware
+    proxy_hide_header Access-Control-Allow-Origin;
+    proxy_hide_header Access-Control-Allow-Methods;
+    proxy_hide_header Access-Control-Allow-Headers;
+    
+    # Proxy configuration for Node.js backend
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        
+        # Required for WebSocket support (if needed later)
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_cache_bypass $http_upgrade;
+        
+        # Standard proxy headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        
+        # Custom headers for request tracking
+        proxy_set_header X-Nginx-Proxy true;
+        proxy_set_header X-Request-Start "t=${msec}";
+        
+        # Disable buffering for streaming responses
+        proxy_buffering off;
+        
+        # Error handling
+        proxy_intercept_errors on;
+        error_page 502 503 504 /50x.html;
+    }
+    
+    # Health check endpoint (bypass proxy for monitoring)
+    location /nginx-health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+    
+    # Static error pages
+    location = /50x.html {
+        root /usr/share/nginx/html;
+        internal;
+    }
+    
+    # Block access to hidden files
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    
+    # Security: Block access to sensitive files
+    location ~ /\.(env|git|gitignore|dockerignore|yml|yaml|toml|lock|md)$ {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss application/rss+xml application/atom+xml image/svg+xml text/x-js text/x-cross-domain-policy application/x-font-ttf application/x-font-opentype application/vnd.ms-fontobject image/x-icon;
+    gzip_disable "MSIE [1-6]\.";
+}
+
+# Rate limiting zone (optional, add to http context in /etc/nginx/nginx.conf)
+# limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
+# Then add to location block: limit_req zone=api burst=20 nodelay;
+
+===============================================================================
+4. PM2 CONFIGURATION
+===============================================================================
+
+Create /opt/rubi-backend/ecosystem.config.js:
+
+module.exports = {
+  apps: [{
+    // Application name in PM2
+    name: 'rubi-backend',
+    
+    // Entry point - using prod-server.ts compiled output
+    script: './dist/prod-server.js',
+    
+    // Working directory
+    cwd: '/opt/rubi-backend',
+    
+    // Number of instances (1 for now, can scale later)
+    instances: 1,
+    
+    // Enable cluster mode for multiple instances
+    exec_mode: 'fork',
+    
+    // Auto-restart configuration
+    autorestart: true,
+    max_restarts: 10,
+    min_uptime: '10s',
+    
+    // Watch for file changes (disable in production)
+    watch: false,
+    
+    // Ignore watch for these paths
+    ignore_watch: ['node_modules', 'logs', '.git', '*.log'],
+    
+    // Memory limit and restart
+    max_memory_restart: '1G',
+    
+    // Environment variables
+    env_production: {
+      NODE_ENV: 'production',
+      PORT: 3000
+    },
+    
+    env_staging: {
+      NODE_ENV: 'staging',
+      PORT: 3000  
+    },
+    
+    // Log configuration
+    error_file: '/opt/rubi-backend/logs/pm2-error.log',
+    out_file: '/opt/rubi-backend/logs/pm2-out.log',
+    merge_logs: true,
+    time: true,
+    
+    // Log date format
+    log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+    
+    // Graceful shutdown
+    kill_timeout: 5000,
+    listen_timeout: 3000,
+    
+    // Node.js arguments
+    node_args: '--max-old-space-size=1024',
+    
+    // Interpreter (use system node)
+    interpreter: 'node',
+    
+    // Source map support for better error traces
+    source_map_support: true,
+    
+    // Instance variable for cluster mode
+    instance_var: 'INSTANCE_ID',
+    
+    // Additional environment variables from .env file
+    env_file: '/opt/rubi-backend/.env.production'
+  }],
+  
+  // Deploy configuration (optional, for PM2 deploy feature)
+  deploy: {
+    production: {
+      user: 'rubiapp',
+      host: 'ai.fus-ed.com',
+      ref: 'origin/main',
+      repo: 'git@github.com:your-org/rubi-backend.git',
+      path: '/opt/rubi-backend',
+      'pre-deploy-local': 'echo "Deploying to production"',
+      'post-deploy': 'npm ci --production=false && npm run build && pm2 reload ecosystem.config.js --env production',
+      'pre-setup': 'npm install -g pm2'
+    }
+  }
+};
+
+PM2 Commands Reference:
+
+# Start application
+pm2 start ecosystem.config.js --env production
+
+# View running processes
+pm2 list
+pm2 status
+
+# View logs
+pm2 logs rubi-backend
+pm2 logs rubi-backend --lines 100
+pm2 logs rubi-backend --err
+
+# Monitor resources
+pm2 monit
+
+# Restart application
+pm2 restart rubi-backend
+pm2 reload rubi-backend  # Zero-downtime reload
+
+# Stop application
+pm2 stop rubi-backend
+
+# Delete from PM2
+pm2 delete rubi-backend
+
+# Save current process list
+pm2 save
+
+# Resurrect saved process list
+pm2 resurrect
+
+# Update PM2
+pm2 update
+
+# Flush logs
+pm2 flush
+
+# View detailed info
+pm2 describe rubi-backend
+
+# CPU/Memory profiling
+pm2 profile:cpu rubi-backend
+pm2 profile:mem rubi-backend
+
+===============================================================================
+5. SYSTEMD / BOOTSTRAPPING
+===============================================================================
+
+PM2 Startup Configuration:
+
+# Generate startup script (run as ubuntu user)
+sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u rubiapp --hp /home/rubiapp
+
+# This creates: /etc/systemd/system/pm2-rubiapp.service
+
+# Start PM2 as rubiapp user
+sudo su - rubiapp
+pm2 start ecosystem.config.js --env production
+pm2 save
+
+# Exit back to ubuntu user
+exit
+
+# Enable PM2 service
+sudo systemctl enable pm2-rubiapp
+sudo systemctl start pm2-rubiapp
+sudo systemctl status pm2-rubiapp
+
+# Verify auto-start works
+sudo reboot
+# After reboot, verify:
+pm2 list  # Should show rubi-backend running
+
+Additional systemd commands:
+
+# View PM2 service logs
+sudo journalctl -u pm2-rubiapp -f
+
+# Restart PM2 service
+sudo systemctl restart pm2-rubiapp
+
+# Stop PM2 service
+sudo systemctl stop pm2-rubiapp
+
+===============================================================================
+6. CORS AND SECURITY CONFIGURATION
+===============================================================================
+
+CORS Configuration Strategy:
+
+The backend already handles CORS via Express middleware in prod-server.ts. Key configuration points:
+
+1. Environment Variables (in .env.production):
+   CORS_ALLOWED_ORIGINS=https://sales.multi.rubi.digital,chrome-extension://*
+
+2. Backend CORS middleware allows:
+   - Moodle/Rubi domain: https://sales.multi.rubi.digital
+   - Chrome extensions: chrome-extension://* (matches any extension ID)
+   - Additional domains as needed
+
+3. Security considerations:
+   - Never use wildcard (*) for production origins
+   - Always specify exact domains or patterns
+   - Chrome extensions use special origin format: chrome-extension://[extension-id]
+   
+4. Headers allowed:
+   - Content-Type, Authorization, X-Requested-With
+   - X-Session-Id (for extension sessions)
+   - X-Org-Id (for org context)
+   - X-Rubi-Identity-JWT (for Moodle identity)
+
+5. Authentication flow:
+   a. Extension gets identity JWT from Moodle identity.php
+   b. Extension includes JWT in X-Rubi-Identity-JWT header
+   c. Backend validates JWT using MOODLE_IDENTITY_JWT_SECRET
+   d. Backend fetches org config from Moodle config.php
+   e. Actions are executed with user/org context
+
+Additional Security Measures:
+
+1. Rate limiting per IP (configured in backend)
+2. Request size limits (10MB max)
+3. JWT validation for all protected endpoints
+4. Org-level policy enforcement
+5. Action-specific usage limits
+6. HTTPS-only communication
+7. Security headers via Nginx
+
+===============================================================================
+7. INTEGRATION CHECKS (END-TO-END)
+===============================================================================
+
+Backend Health Checks:
+-----------------------
+□ Basic health endpoint:
+  curl https://ai.fus-ed.com/api/health
+  Expected: {"status":"healthy","timestamp":"...","uptime":...,"environment":"production"}
+
+□ Readiness check:
+  curl https://ai.fus-ed.com/api/ready
+  Expected: {"status":"ready","services":{"orgConfig":true,"providers":true,"cache":true}}
+
+□ Metrics endpoint:
+  curl https://ai.fus-ed.com/api/metrics
+  Expected: Prometheus-formatted metrics or JSON metrics
+
+Moodle Plugin Integration:
+--------------------------
+□ Test backend can reach Moodle config endpoint:
+  # From EC2 instance
+  curl -H "X-API-Token: ${MOODLE_CONFIG_API_TOKEN}" \
+    https://sales.multi.rubi.digital/local/rubi_ai_admin/api/config.php?orgid=fused
+  Expected: JSON with org configuration
+
+□ Test identity endpoint is accessible:
+  curl https://sales.multi.rubi.digital/local/rubi_ai_admin/api/identity.php
+  Expected: JSON with identity data and JWT
+
+□ Verify backend logs show Moodle config usage:
+  pm2 logs rubi-backend | grep "orgConfigSource.*moodle"
+  Expected: Log entries showing orgConfigSource: 'moodle'
+
+Browser Extension Integration:
+------------------------------
+□ Configure extension with backend URL:
+  - In extension's environment.js or config:
+    BACKEND_CONFIG = { baseUrl: 'https://ai.fus-ed.com' }
+
+□ Verify extension handshake:
+  - Open Chrome DevTools Network tab
+  - Navigate to LinkedIn/Salesforce with extension active
+  - Look for: POST https://ai.fus-ed.com/api/auth/extension/handshake
+  - Expected: 200 OK with session token
+
+□ Test action execution:
+  - Open LinkedIn profile with extension
+  - Click "Analyze Profile" in Rubi drawer
+  - DevTools should show:
+    POST https://ai.fus-ed.com/api/actions/analyze_linkedin_profile/execute
+  - Expected: 200 OK with AI-generated analysis
+
+□ Verify metadata in responses:
+  - Check action response includes:
+    {
+      "result": {...},
+      "metadata": {
+        "provider": "anthropic",
+        "model": "claude-3-opus-20240229",
+        "orgConfigSource": "moodle",
+        "identitySource": "moodle",
+        "tokensUsed": ...,
+        "latency": ...
+      }
+    }
+
+Policy and Safety Checks:
+-------------------------
+□ Test org feature flag enforcement:
+  - Disable browser_extension_enabled in Moodle admin
+  - Extension should show "Feature disabled" message
+
+□ Test usage limits:
+  - Set low limit for analyze_linkedin_profile in org config
+  - Exceed limit with multiple requests
+  - Expected: 429 Too Many Requests or limit warning
+
+□ Test authentication requirement:
+  - Make request without JWT header:
+    curl -X POST https://ai.fus-ed.com/api/actions/analyze_email_message/execute
+  - Expected: 401 Unauthorized
+
+□ Test CORS restrictions:
+  - Make request from unauthorized domain
+  - Expected: CORS error in browser console
+
+Load and Performance:
+--------------------
+□ Simple load test:
+  # Install Apache Bench if needed: sudo apt install apache2-utils
+  ab -n 100 -c 10 https://ai.fus-ed.com/api/health
+  Expected: All requests succeed, response time < 100ms
+
+□ Monitor memory usage:
+  pm2 monit
+  Expected: Memory stable, no leaks over time
+
+□ Check log rotation:
+  ls -la /opt/rubi-backend/logs/
+  Expected: Logs are rotating, not growing indefinitely
+
+===============================================================================
+8. ROLLOUT AND FUTURE MIGRATION NOTES
+===============================================================================
+
+Current Architecture Benefits:
+------------------------------
+- Simple single-instance deployment suitable for pilot
+- All configuration in environment variables (12-factor app)
+- Stateless application design (ready for horizontal scaling)
+- Standard Node.js + PM2 pattern (familiar to most teams)
+- Nginx provides flexibility for routing and load balancing
+
+Migration Path to ECS/Fargate:
+-------------------------------
+1. Containerization:
+   - Create Dockerfile (likely already exists)
+   - Build image: docker build -t rubi-backend:latest .
+   - Push to ECR: aws ecr push
+
+2. ECS Task Definition:
+   - Port environment variables directly to task definition
+   - Mount EFS for shared logs if needed
+   - Configure health check: /api/health
+
+3. ALB Configuration:
+   - Create target group with health checks
+   - Move Nginx routing rules to ALB path patterns
+   - Use ALB for SSL termination (ACM certificate)
+
+4. Service Definition:
+   - Start with 2 tasks for redundancy
+   - Configure auto-scaling based on CPU/memory
+   - Use service discovery for internal communication
+
+5. Database/Cache (if needed):
+   - RDS for persistent data
+   - ElastiCache for Redis
+   - Both accessible from ECS tasks via VPC
+
+Migration Path to Kubernetes (EKS):
+-----------------------------------
+1. Kubernetes Manifests:
+   - Deployment: 2+ replicas
+   - Service: ClusterIP for internal
+   - Ingress: ALB Ingress Controller
+   - ConfigMap: Non-sensitive config
+   - Secret: API keys and secrets
+
+2. Helm Chart:
+   - Package all manifests
+   - Environment-specific values files
+   - Easy rollback with Helm
+
+Environment Variable Reuse:
+--------------------------
+All environment variables can be directly mapped to:
+- ECS: Task definition environment section
+- Kubernetes: ConfigMaps and Secrets
+- Lambda: Environment variables (if going serverless)
+- Elastic Beanstalk: Environment properties
+
+Minimal Code Changes Required:
+------------------------------
+- Application is already containerization-ready
+- Health endpoints exist for orchestrator health checks
+- Graceful shutdown handlers implemented
+- All configuration externalized
+- Stateless design supports any deployment model
+
+Quick Migration Checklist:
+-------------------------
+□ Export current .env.production to parameter store or secrets manager
+□ Create container image from existing code
+□ Choose orchestration platform (ECS, EKS, etc.)
+□ Map environment variables to new platform
+□ Update DNS to point to new load balancer
+□ Run integration checks against new endpoint
+□ Gradually shift traffic if using Route 53 weighted routing
+
+Rollback Strategy:
+-----------------
+- Keep EC2 instance running during migration
+- Use Route 53 weighted routing: 90% EC2, 10% new platform
+- Monitor error rates and performance
+- Gradually increase traffic to new platform
+- Full cutover only after validation period
+- EC2 instance remains as emergency fallback
+
+===============================================================================
+DEPLOYMENT EXECUTION CHECKLIST
+===============================================================================
+
+Pre-Deployment:
+□ AWS account access configured
+□ Domain (ai.fus-ed.com) DNS access available  
+□ Git repository access (deploy key or token)
+□ API keys ready (OpenAI, Anthropic, Google)
+□ Moodle endpoints verified accessible
+□ Shared JWT secret coordinated with Moodle team
+
+Deployment:
+□ Launch EC2 instance with security group
+□ Allocate and associate Elastic IP
+□ Configure Route 53 A record
+□ SSH to instance and run setup commands
+□ Install Node.js, PM2, Nginx, Certbot
+□ Clone repository as rubiapp user
+□ Configure .env.production with actual values
+□ Build application (npm run build)
+□ Start with PM2
+□ Configure Nginx with site config
+□ Obtain Let's Encrypt certificate
+□ Enable PM2 startup on boot
+
+Post-Deployment:
+□ Run all integration checks
+□ Verify Moodle integration working
+□ Test browser extension actions
+□ Monitor logs for errors
+□ Check memory and CPU usage
+□ Verify SSL certificate working
+□ Test auto-restart after reboot
+□ Document any deviations from plan
+
+Handoff:
+□ Share EC2 instance ID and IP
+□ Provide SSH key securely
+□ Document PM2 commands for ops team
+□ Share monitoring URLs
+□ Create runbook for common issues
+□ Schedule knowledge transfer session
+
+===============================================================================
+END OF DEPLOYMENT GUIDE
+===============================================================================
+
+This deployment guide provides a complete, production-ready setup for the Rubi AI Backend on AWS EC2. The configuration is designed for immediate use while maintaining flexibility for future scaling and migration to container orchestration platforms.
+
+Key URLs after deployment:
+- Backend API: https://ai.fus-ed.com
+- Health Check: https://ai.fus-ed.com/api/health
+- Ready Check: https://ai.fus-ed.com/api/ready
+- Metrics: https://ai.fus-ed.com/api/metrics
+
+Support Contacts:
+- DevOps: devops@fus-ed.com
+- Backend Team: rubi-backend@fus-ed.com
+- Security: security@fus-ed.com

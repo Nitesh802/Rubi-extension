@@ -1,0 +1,135 @@
+RUBI AI BACKEND DEPLOYMENT READINESS CHECKLIST
+
+Pre-Deployment Environment Validation
+======================================
+[ ] All environment variables configured in deployment platform
+[ ] JWT_SECRET is unique 64+ character random string
+[ ] ADMIN_JWT_SECRET is different from JWT_SECRET
+[ ] MOODLE_IDENTITY_JWT_SECRET is unique if Moodle enabled
+[ ] API keys validated for all enabled providers (OpenAI, Anthropic, Google)
+[ ] CORS_ALLOWED_ORIGINS includes all required domains
+[ ] Rate limiting configured appropriately for environment
+[ ] Log level set appropriately (debug for staging, info/warn for production)
+
+Identity and Organization Configuration
+========================================
+[ ] Organization configurations exist in org-config/organizations/
+[ ] Each org has valid YAML configuration file
+[ ] Org intelligence data present in org-config/intelligence/
+[ ] Default org intelligence loaded correctly
+[ ] Moodle identity service configured if MOODLE_CONFIG_ENABLED=true
+[ ] MOODLE_BASE_URL points to correct Moodle instance
+[ ] MOODLE_CONFIG_API_TOKEN is valid and has required permissions
+
+LLM Provider Validation
+=======================
+[ ] Primary provider API key is valid
+[ ] Primary provider can be reached from deployment environment
+[ ] Fallback providers configured and API keys valid
+[ ] Model configurations match available models for each provider
+[ ] Token limits configured appropriately
+[ ] Usage tracking initialized and logging correctly
+
+CORS Validation
+===============
+[ ] Browser extension domain added to CORS_ALLOWED_ORIGINS
+[ ] LinkedIn domains included: https://linkedin.com, https://www.linkedin.com
+[ ] Salesforce domains included: https://salesforce.com, https://login.salesforce.com
+[ ] Additional customer-specific domains added as needed
+[ ] CORS preflight requests handled correctly
+
+Health and Readiness Checks
+============================
+[ ] /health endpoint returns 200 OK
+[ ] /ready endpoint returns 200 when all services initialized
+[ ] Memory usage within acceptable limits
+[ ] Response times under 1 second for health checks
+[ ] All dependent services reachable
+
+Token Usage and Logging
+========================
+[ ] LLM usage logger initialized and writing to correct location
+[ ] Token usage tracked per organization
+[ ] Usage limits enforced if configured
+[ ] Log rotation configured to prevent disk space issues
+[ ] Error logs capturing sufficient detail for debugging
+
+Fallback Testing
+================
+[ ] Primary provider failure triggers fallback correctly
+[ ] Fallback chain works through all configured providers
+[ ] Error messages returned when all providers fail
+[ ] Retry logic functioning with exponential backoff
+[ ] Circuit breaker preventing cascade failures
+
+End-to-End Workflow Tests
+=========================
+[ ] Extension can obtain authentication token
+[ ] Extension session management working correctly
+[ ] Context extraction from LinkedIn working
+[ ] Context extraction from Salesforce working
+[ ] Action execution returning expected results
+[ ] Prompt templates rendering with variables
+[ ] Organization-specific intelligence applied correctly
+
+Performance Validation
+======================
+[ ] Response times under 3 seconds for typical requests
+[ ] Concurrent request handling working correctly
+[ ] Rate limiting not blocking legitimate traffic
+[ ] Database/cache connections pooled efficiently
+[ ] Memory usage stable under load
+
+Security Validation
+===================
+[ ] All secrets stored securely (not in code)
+[ ] HTTPS enforced in production
+[ ] Authentication required for protected endpoints
+[ ] Admin endpoints protected with separate auth
+[ ] Input validation preventing injection attacks
+[ ] Error messages not leaking sensitive information
+
+Monitoring Setup
+================
+[ ] Application logs accessible from deployment platform
+[ ] Error alerting configured
+[ ] Uptime monitoring enabled
+[ ] Performance metrics being collected
+[ ] Disk space monitoring for log files
+[ ] API usage tracking enabled
+
+Deployment Platform Specific
+=============================
+[ ] Build process completing successfully
+[ ] Environment variables loaded from platform secrets
+[ ] Health checks configured in platform
+[ ] Auto-scaling configured if needed
+[ ] SSL/TLS certificates valid
+[ ] Custom domain configured and DNS pointing correctly
+
+Post-Deployment Verification
+============================
+[ ] Application accessible at configured URL
+[ ] All API endpoints responding correctly
+[ ] Browser extension can connect to backend
+[ ] Actions menu populated in extension
+[ ] Context extraction working from supported platforms
+[ ] LLM responses generated successfully
+[ ] Logs showing expected activity
+[ ] No critical errors in logs
+
+Rollback Plan
+=============
+[ ] Previous version tagged in git
+[ ] Database backup taken if applicable
+[ ] Rollback procedure documented
+[ ] Team knows how to execute rollback
+[ ] Rollback tested in staging environment
+
+Sign-offs
+=========
+[ ] Development team approval
+[ ] Security review completed
+[ ] Performance testing passed
+[ ] Documentation updated
+[ ] Stakeholder approval received

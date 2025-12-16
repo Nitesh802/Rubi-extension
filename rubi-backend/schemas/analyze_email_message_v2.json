@@ -1,0 +1,338 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Email Message Analysis",
+  "type": "object",
+  "required": [
+    "clarityScore",
+    "relevanceScore",
+    "momentumScore",
+    "overallScore",
+    "analysis",
+    "suggestions",
+    "rewrittenExamples",
+    "psychologicalFactors",
+    "callToAction",
+    "recipientConsiderations",
+    "subjectLine",
+    "nextSteps"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "clarityScore": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "relevanceScore": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "momentumScore": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "overallScore": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "analysis": {
+      "type": "object",
+      "required": ["strengths", "weaknesses", "tone", "structure"],
+      "additionalProperties": false,
+      "properties": {
+        "strengths": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 300
+          }
+        },
+        "weaknesses": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 300
+          }
+        },
+        "tone": {
+          "type": "object",
+          "required": ["current", "recommended", "reasoning"],
+          "additionalProperties": false,
+          "properties": {
+            "current": {
+              "type": "string",
+              "enum": ["friendly", "professional", "formal", "casual", "urgent", "passive"]
+            },
+            "recommended": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "reasoning": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 300
+            }
+          }
+        },
+        "structure": {
+          "type": "object",
+          "required": ["opening", "body", "closing", "recommendations"],
+          "additionalProperties": false,
+          "properties": {
+            "opening": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 300
+            },
+            "body": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 300
+            },
+            "closing": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 300
+            },
+            "recommendations": {
+              "type": "array",
+              "minItems": 0,
+              "items": {
+                "type": "string",
+                "minLength": 5,
+                "maxLength": 300
+              }
+            }
+          }
+        }
+      }
+    },
+    "suggestions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["type", "issue", "suggestion", "impact"],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["clarity", "relevance", "momentum", "tone", "structure"]
+          },
+          "issue": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 300
+          },
+          "suggestion": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 500
+          },
+          "impact": {
+            "type": "string",
+            "enum": ["high", "medium", "low"]
+          },
+          "example": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 500
+          }
+        }
+      }
+    },
+    "rewrittenExamples": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": ["original", "improved", "explanation"],
+        "additionalProperties": false,
+        "properties": {
+          "original": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 1000
+          },
+          "improved": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 1000
+          },
+          "explanation": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          }
+        }
+      }
+    },
+    "psychologicalFactors": {
+      "type": "object",
+      "required": ["reciprocity", "urgency", "socialProof", "authority", "personalization"],
+      "additionalProperties": false,
+      "properties": {
+        "reciprocity": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 300
+        },
+        "urgency": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 300
+        },
+        "socialProof": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 300
+        },
+        "authority": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 300
+        },
+        "personalization": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 300
+        }
+      }
+    },
+    "callToAction": {
+      "type": "object",
+      "required": ["exists", "clarity", "strength", "suggestions"],
+      "additionalProperties": false,
+      "properties": {
+        "exists": {
+          "type": "boolean"
+        },
+        "clarity": {
+          "type": "string",
+          "enum": ["clear", "vague", "missing"]
+        },
+        "strength": {
+          "type": "string",
+          "enum": ["strong", "moderate", "weak"]
+        },
+        "suggestions": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 300
+          }
+        }
+      }
+    },
+    "recipientConsiderations": {
+      "type": "object",
+      "required": ["likelyPriorities", "potentialObjections", "engagementPrediction", "responseStrategy"],
+      "additionalProperties": false,
+      "properties": {
+        "likelyPriorities": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 200
+          }
+        },
+        "potentialObjections": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 300
+          }
+        },
+        "engagementPrediction": {
+          "type": "string",
+          "enum": ["high", "medium", "low"]
+        },
+        "responseStrategy": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500
+        }
+      }
+    },
+    "subjectLine": {
+      "type": "object",
+      "required": ["effectiveness", "openRate", "suggestions"],
+      "additionalProperties": false,
+      "properties": {
+        "effectiveness": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "openRate": {
+          "type": "string",
+          "enum": ["likely", "unlikely", "neutral"]
+        },
+        "suggestions": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 150
+          }
+        }
+      }
+    },
+    "nextSteps": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": ["action", "timing", "rationale"],
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 300
+          },
+          "timing": {
+            "type": "string",
+            "enum": ["immediate", "soon", "later"]
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          }
+        }
+      }
+    },
+    "templates": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "followUp": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 2000
+        },
+        "alternativeApproach": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 2000
+        }
+      }
+    }
+  }
+}

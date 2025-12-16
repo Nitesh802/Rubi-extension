@@ -1,0 +1,236 @@
+id: extract_key_entities
+version: "2.0.0"
+name: Key Entity Extractor
+description: Extracts and analyzes key entities from any content with relationship mapping
+author: Rubi AI Team
+createdAt: "2024-01-01T00:00:00Z"
+updatedAt: "2024-11-27T00:00:00Z"
+model:
+  provider: openai
+  name: gpt-4-turbo-preview
+  temperature: 0.3
+  maxTokens: 1800
+  topP: 0.85
+  fallbackProviders:
+    - provider: anthropic
+      name: claude-3-sonnet-20240229
+    - provider: google
+      name: gemini-2.0-pro
+systemPrompt: |
+  You are an expert entity extraction and relationship mapping specialist.
+  Your role is to identify, extract, and analyze all key entities from content and map their relationships.
+  
+  Entity Types to Extract:
+  - People (names, roles, titles)
+  - Organizations (companies, departments, teams)
+  - Locations (cities, offices, regions)
+  - Products/Services (offerings, solutions, tools)
+  - Events (meetings, deadlines, milestones)
+  - Concepts (ideas, strategies, initiatives)
+  - Metrics (numbers, KPIs, financial data)
+  
+  Extraction Guidelines:
+  - Be thorough in entity identification
+  - Capture entity attributes and context
+  - Map relationships between entities
+  - Assess entity importance and relevance
+  - Identify entity sentiment and tone
+  - Never create entities not present in content
+userPrompt: |
+  Extract and analyze all key entities from the following content:
+
+  URL: {{url}}
+  Platform: {{platform}}
+  Page Type: {{pageType}}
+  Title: {{title}}
+  Extraction Time: {{timestamp}}
+  
+  Content Fields:
+  {{#each fields}}
+  {{@key}}: {{this}}
+  {{/each}}
+  
+  Full Content:
+  {{visibleText}}
+  
+  {{#if history}}
+  Historical Context:
+  {{#each history}}
+  - {{this.timestamp}}: {{this.type}} - {{this.content}}
+  {{/each}}
+  {{/if}}
+
+  Extract and analyze entities with this JSON structure:
+  {
+    "summary": {
+      "totalEntities": number,
+      "primaryEntity": "most important entity",
+      "primaryContext": "context of primary entity",
+      "extractionConfidence": 0-100
+    },
+    "people": [
+      {
+        "name": "full name",
+        "role": "job title or role",
+        "organization": "associated organization",
+        "importance": "primary|secondary|mentioned",
+        "sentiment": "positive|neutral|negative|mixed",
+        "context": "relevant context about this person",
+        "contactInfo": {
+          "email": "if mentioned",
+          "phone": "if mentioned",
+          "linkedin": "if mentioned"
+        },
+        "quotes": ["direct quotes from this person"],
+        "actions": ["actions taken or mentioned"],
+        "relationships": [
+          {
+            "entity": "related entity name",
+            "type": "relationship type"
+          }
+        ]
+      }
+    ],
+    "organizations": [
+      {
+        "name": "organization name",
+        "type": "company|department|team|partner|competitor|vendor",
+        "industry": "industry if identifiable",
+        "size": "enterprise|large|medium|small|startup",
+        "importance": "primary|secondary|mentioned",
+        "role": "role in context",
+        "sentiment": "positive|neutral|negative|mixed",
+        "attributes": {
+          "location": "if mentioned",
+          "website": "if mentioned",
+          "employees": "if mentioned"
+        },
+        "relationships": [
+          {
+            "entity": "related entity",
+            "type": "customer|partner|competitor|subsidiary|other"
+          }
+        ]
+      }
+    ],
+    "products": [
+      {
+        "name": "product/service name",
+        "type": "software|hardware|service|platform|feature",
+        "vendor": "providing organization",
+        "category": "product category",
+        "importance": "primary|secondary|mentioned",
+        "sentiment": "positive|neutral|negative|mixed",
+        "attributes": {
+          "price": "if mentioned",
+          "features": ["key features mentioned"],
+          "benefits": ["benefits mentioned"],
+          "issues": ["problems mentioned"]
+        },
+        "usage": "how it's being used or considered",
+        "stage": "evaluation|implementation|production|sunset"
+      }
+    ],
+    "locations": [
+      {
+        "name": "location name",
+        "type": "country|state|city|office|region|venue",
+        "importance": "primary|secondary|mentioned",
+        "context": "why this location matters",
+        "attributes": {
+          "timezone": "if relevant",
+          "address": "if mentioned"
+        }
+      }
+    ],
+    "events": [
+      {
+        "name": "event name or description",
+        "type": "meeting|deadline|milestone|conference|launch",
+        "date": "date/time if mentioned",
+        "status": "past|upcoming|ongoing",
+        "importance": "critical|high|medium|low",
+        "participants": ["involved entities"],
+        "outcome": "if past event",
+        "requirements": "if future event"
+      }
+    ],
+    "metrics": [
+      {
+        "name": "metric name",
+        "value": "numeric value",
+        "unit": "unit of measurement",
+        "type": "financial|performance|growth|quality|other",
+        "trend": "increasing|decreasing|stable",
+        "benchmark": "comparison point if mentioned",
+        "importance": "critical|high|medium|low",
+        "context": "what this metric represents"
+      }
+    ],
+    "concepts": [
+      {
+        "name": "concept or initiative name",
+        "category": "strategy|process|methodology|technology|trend",
+        "importance": "primary|secondary|mentioned",
+        "description": "brief description",
+        "relatedEntities": ["entities connected to this concept"],
+        "impact": "expected or actual impact"
+      }
+    ],
+    "relationships": [
+      {
+        "source": "entity 1",
+        "sourceType": "entity type",
+        "target": "entity 2",
+        "targetType": "entity type",
+        "relationship": "relationship description",
+        "strength": "strong|moderate|weak",
+        "sentiment": "positive|neutral|negative|mixed",
+        "evidence": "supporting text"
+      }
+    ],
+    "graph": {
+      "centralNodes": ["most connected entities"],
+      "clusters": [
+        {
+          "theme": "cluster theme",
+          "entities": ["entities in this cluster"],
+          "significance": "why this cluster matters"
+        }
+      ],
+      "isolatedEntities": ["entities with few connections"]
+    },
+    "insights": {
+      "keyPlayers": ["most important entities"],
+      "hiddenConnections": ["non-obvious relationships discovered"],
+      "gaps": ["missing entities or relationships"],
+      "opportunities": ["opportunities based on entity analysis"],
+      "risks": ["risks identified from entity patterns"]
+    }
+  }
+variables:
+  - url
+  - platform
+  - pageType
+  - fields
+  - visibleText
+  - history
+  - timestamp
+  - title
+  - userContext
+outputFormat: json
+retryPrompt: |
+  The previous extraction was incomplete or invalid. Please regenerate ensuring:
+  1. All identified entities are properly categorized
+  2. Relationships are bidirectional where appropriate
+  3. Confidence scores are between 0-100
+  4. Importance levels use only specified values
+  5. No duplicate entities across categories
+  6. All arrays contain meaningful items
+  
+  Re-extract entities and provide complete JSON output.
+metadata:
+  schemaVersion: "2.0"
+  extractionMethod: "comprehensive"
+  relationshipDepth: "detailed"
+  maxRetries: 2

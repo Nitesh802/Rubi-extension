@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rubi Admin Panel - Org Configuration Management</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="screen active">
+            <div class="login-container">
+                <h1>Rubi Admin Panel</h1>
+                <p class="subtitle">Organization Configuration Management</p>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                    <div id="loginError" class="error-message"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminScreen" class="screen">
+            <!-- Header -->
+            <header class="admin-header">
+                <div class="header-content">
+                    <h1>Rubi Admin Panel</h1>
+                    <div class="header-actions">
+                        <span id="adminInfo" class="admin-info"></span>
+                        <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <div class="admin-content">
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                    <nav>
+                        <ul class="nav-list">
+                            <li><a href="#" data-view="list" class="nav-link active">Organizations</a></li>
+                            <li><a href="#" data-view="create" class="nav-link">Create New Org</a></li>
+                            <li><a href="#" data-view="stats" class="nav-link">Statistics</a></li>
+                        </ul>
+                    </nav>
+                </aside>
+
+                <!-- Content Area -->
+                <main class="main-content">
+                    <!-- Organizations List View -->
+                    <div id="listView" class="view active">
+                        <div class="view-header">
+                            <h2>Organizations</h2>
+                            <button id="refreshOrgsBtn" class="btn btn-secondary">Refresh</button>
+                        </div>
+                        <div class="search-bar">
+                            <input type="text" id="searchOrgs" placeholder="Search organizations...">
+                        </div>
+                        <div id="orgsList" class="orgs-list">
+                            <div class="loading">Loading organizations...</div>
+                        </div>
+                    </div>
+
+                    <!-- Create/Edit Organization View -->
+                    <div id="createView" class="view">
+                        <div class="view-header">
+                            <h2 id="formTitle">Create New Organization</h2>
+                        </div>
+                        <form id="orgForm" class="org-form">
+                            <!-- Basic Information -->
+                            <section class="form-section">
+                                <h3>Basic Information</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="orgId">Organization ID *</label>
+                                        <input type="text" id="orgId" name="orgId" required>
+                                        <small>Unique identifier (cannot be changed later)</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="orgName">Organization Name *</label>
+                                        <input type="text" id="orgName" name="orgName" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="planTier">Plan Tier *</label>
+                                    <select id="planTier" name="planTier" required>
+                                        <option value="free">Free</option>
+                                        <option value="pilot">Pilot</option>
+                                        <option value="enterprise">Enterprise</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
+                            </section>
+
+                            <!-- Allowed Actions -->
+                            <section class="form-section">
+                                <h3>Allowed Actions</h3>
+                                <div class="checkbox-group" id="allowedActions">
+                                    <label><input type="checkbox" name="allowedActions" value="summarize_linkedin_profile"> Summarize LinkedIn Profile</label>
+                                    <label><input type="checkbox" name="allowedActions" value="analyze_email_message"> Analyze Email Message</label>
+                                    <label><input type="checkbox" name="allowedActions" value="review_salesforce_opportunity"> Review Salesforce Opportunity</label>
+                                    <label><input type="checkbox" name="allowedActions" value="generate_dashboard_insights"> Generate Dashboard Insights</label>
+                                    <label><input type="checkbox" name="allowedActions" value="deep_linkedin_analysis"> Deep LinkedIn Analysis</label>
+                                    <label><input type="checkbox" name="allowedActions" value="email_tone_coaching"> Email Tone Coaching</label>
+                                    <label><input type="checkbox" name="allowedActions" value="opportunity_risk_assessment"> Opportunity Risk Assessment</label>
+                                    <label><input type="checkbox" name="allowedActions" value="extract_action_items"> Extract Action Items</label>
+                                    <label><input type="checkbox" name="allowedActions" value="generate_email_draft"> Generate Email Draft</label>
+                                </div>
+                            </section>
+
+                            <!-- Model Preferences -->
+                            <section class="form-section">
+                                <h3>Model Preferences</h3>
+                                <div class="form-group">
+                                    <label for="defaultProvider">Default Provider</label>
+                                    <select id="defaultProvider" name="defaultProvider">
+                                        <option value="openai">OpenAI</option>
+                                        <option value="anthropic">Anthropic</option>
+                                        <option value="google">Google</option>
+                                    </select>
+                                </div>
+                            </section>
+
+                            <!-- Tone Profile -->
+                            <section class="form-section">
+                                <h3>Tone Profile</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="toneId">Tone ID</label>
+                                        <input type="text" id="toneId" name="toneId" value="default">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="toneStyle">Tone Style</label>
+                                        <select id="toneStyle" name="toneStyle">
+                                            <option value="formal">Formal</option>
+                                            <option value="casual">Casual</option>
+                                            <option value="consultative" selected>Consultative</option>
+                                            <option value="executive">Executive</option>
+                                            <option value="coach">Coach</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="localeOverride">Locale Override (Optional)</label>
+                                        <input type="text" id="localeOverride" name="localeOverride" placeholder="e.g., en-US">
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Feature Flags -->
+                            <section class="form-section">
+                                <h3>Feature Flags</h3>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" name="enableDebugPanel" id="enableDebugPanel"> Enable Debug Panel</label>
+                                    <label><input type="checkbox" name="enableHistory" id="enableHistory"> Enable History</label>
+                                    <label><input type="checkbox" name="enableExperimentalActions" id="enableExperimentalActions"> Enable Experimental Actions</label>
+                                    <label><input type="checkbox" name="enableSalesforceBeta" id="enableSalesforceBeta"> Enable Salesforce Beta</label>
+                                    <label><input type="checkbox" name="enableLinkedInDeepDive" id="enableLinkedInDeepDive"> Enable LinkedIn Deep Dive</label>
+                                    <label><input type="checkbox" name="enableEmailToneStrictMode" id="enableEmailToneStrictMode"> Enable Email Tone Strict Mode</label>
+                                </div>
+                            </section>
+
+                            <!-- Limits -->
+                            <section class="form-section">
+                                <h3>Limits</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="maxActionsPerPage">Max Actions Per Page</label>
+                                        <input type="number" id="maxActionsPerPage" name="maxActionsPerPage" value="10" min="1" max="100">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="maxActionsPerSession">Max Actions Per Session</label>
+                                        <input type="number" id="maxActionsPerSession" name="maxActionsPerSession" value="100" min="1" max="1000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="maxTokensPerAction">Max Tokens Per Action</label>
+                                        <input type="number" id="maxTokensPerAction" name="maxTokensPerAction" value="4000" min="100" max="32000">
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Form Actions -->
+                            <div class="form-actions">
+                                <button type="button" id="cancelBtn" class="btn btn-secondary">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Organization</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Statistics View -->
+                    <div id="statsView" class="view">
+                        <div class="view-header">
+                            <h2>Organization Statistics</h2>
+                        </div>
+                        <div id="statsContent" class="stats-content">
+                            <div class="loading">Loading statistics...</div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h3>Confirm Delete</h3>
+            <p>Are you sure you want to delete this organization?</p>
+            <p class="org-name-confirm"></p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="toast"></div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

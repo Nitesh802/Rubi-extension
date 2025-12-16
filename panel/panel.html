@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rubi Debug Panel</title>
+    <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+    <div id="rubi-debug-panel" style="display: none;">
+        <div class="panel-header">
+            <h3>Rubi Debug Panel</h3>
+            <button id="close-panel" type="button">×</button>
+        </div>
+        
+        <div class="panel-content">
+            <div id="context-info">
+                <div class="info-row">
+                    <label>Platform:</label>
+                    <span id="platform-value">--</span>
+                </div>
+                <div class="info-row">
+                    <label>Page Type:</label>
+                    <span id="pagetype-value">--</span>
+                </div>
+                <div class="info-row">
+                    <label>Confidence:</label>
+                    <span id="confidence-value">--</span>
+                </div>
+                <div class="info-row">
+                    <label>Missing Required:</label>
+                    <span id="missing-fields-value">--</span>
+                </div>
+            </div>
+            
+            <div class="fields-section">
+                <div class="section-header">
+                    <h4>Fields</h4>
+                    <button id="toggle-fields" type="button">Show</button>
+                </div>
+                <div id="fields-content" class="collapsible-content" style="display: none;">
+                    <pre id="fields-json">No fields available</pre>
+                </div>
+            </div>
+            
+            <div class="actions-section">
+                <button id="copy-payload" type="button">Copy Payload</button>
+                <button id="send-to-rubi" type="button">Send to Rubi</button>
+            </div>
+            
+            <!-- Phase 10A: Add Resolution/Diagnostics Section -->
+            <div class="resolution-section">
+                <div class="section-header">
+                    <h4>Resolution</h4>
+                </div>
+                <div id="resolution-info" class="resolution-info">
+                    <div class="info-row">
+                        <label>Backend:</label>
+                        <span id="resolution-backend">--</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Provider:</label>
+                        <span id="resolution-provider">--</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Model:</label>
+                        <span id="resolution-model">--</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Org Config Source:</label>
+                        <span id="resolution-orgconfig">--</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Identity Source:</label>
+                        <span id="resolution-identity">--</span>
+                    </div>
+                    <div class="info-row" id="resolution-warnings-row" style="display: none;">
+                        <label>Warnings:</label>
+                        <span id="resolution-warnings" class="warnings-text">--</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="available-actions-section">
+                <div class="section-header">
+                    <h4>Available Actions</h4>
+                </div>
+                <div id="actions-menu" class="actions-menu">
+                    <p class="no-actions">No actions available</p>
+                </div>
+                <div id="action-result" class="action-result" style="display: none;">
+                    <div class="result-header">
+                        <h5>Action Result</h5>
+                        <button id="clear-result" type="button">×</button>
+                    </div>
+                    <pre id="result-content"></pre>
+                </div>
+            </div>
+            
+            <div id="status-message" class="status-message" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <script src="panel.js"></script>
+</body>
+</html>
