@@ -13,13 +13,16 @@ const BACKEND_CONFIG = {
   baseUrl: window.RubiEnvironment?.getBackendUrl() || 'https://ai.fus-ed.com',
   // Moodle URL (will be overridden by environment config)
   moodleUrl: window.RubiEnvironment?.getMoodleUrl() || 'http://localhost:8080',
-  
+
   // Request timeout in milliseconds
   timeoutMs: 120000, // 2 minutes
-  
+
   // Phase 10B: Extension authentication token
   extensionAuthToken: window.RubiEnvironment?.getAuthToken() || 'TOKEN_GOES_HERE',
-  
+
+  // Phase 9A: Extension shared secret for handshake authentication
+  extensionSharedSecret: 'dev-extension-secret-key',
+
   // Phase 9A: Development fallback settings
   allowDevFallback: true, // Allow fallback to dev mode if auth fails
   devToken: 'DEV_STATIC_TOKEN_REPLACE_ME', // Legacy dev token for backwards compatibility
