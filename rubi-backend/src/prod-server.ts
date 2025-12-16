@@ -165,6 +165,8 @@ app.get('/ready', async (req, res) => {
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/extension/auth', extensionAuthRouter);
+// Alias for extension compatibility - extension calls /api/auth/extension/...
+app.use('/api/auth/extension', extensionAuthRouter);
 app.use('/api/extension/session', extensionAuthService.requireExtensionAuth, extensionSessionRouter);
 app.use('/api/admin/orgs', extensionAuthService.requireExtensionAuth, adminOrgsRouter);
 app.use('/api/actions', extensionAuthService.requireExtensionAuth, actionsRouter);
