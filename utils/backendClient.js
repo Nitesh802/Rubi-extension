@@ -10,7 +10,7 @@
 // Phase 10B: Configuration with environment support
 const BACKEND_CONFIG = {
   // Base URL for the backend API (will be overridden by environment config)
-  baseUrl: window.RubiEnvironment?.getBackendUrl() || 'http://localhost:3000',
+  baseUrl: window.RubiEnvironment?.getBackendUrl() || 'https://ai.fus-ed.com',
   // Moodle URL (will be overridden by environment config)
   moodleUrl: window.RubiEnvironment?.getMoodleUrl() || 'http://localhost:8080',
   
