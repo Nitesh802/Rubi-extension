@@ -1,9 +1,12 @@
 /**
  * Identity and Session Context Types for Rubi Platform
- * 
+ *
  * These types define the user, organization, and session context
  * that flows through the entire system from browser extension to backend.
  */
+
+// Import and re-export IdentityContext from execution
+export { IdentityContext } from './execution';
 
 /**
  * Represents a Rubi user within the system

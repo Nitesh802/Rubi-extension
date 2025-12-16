@@ -17,7 +17,7 @@ import { actionRegistry } from '../actions/registry';
 import { templateEngine } from '../templates/template-engine';
 import { schemaValidator } from '../schemas/schema-validator';
 import { orgIntelligenceService } from '../services/orgIntelligenceService';
-import { logger } from '../config/logger';
+import { logger } from '../logging/logger';
 import { NormalizedRubiContextPayload, ActionUtilities, AuthenticatedRequestContext } from '../types';
 import * as fs from 'fs/promises';
 import * as path from 'path';

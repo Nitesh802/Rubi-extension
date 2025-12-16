@@ -4,7 +4,7 @@
  */
 
 import { OrgIntelligence } from '../types/orgIntelligence';
-import { logger } from '../config/logger';
+import { logger } from '../logging/logger';
 
 export interface PromptIntelligence {
   company: {

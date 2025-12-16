@@ -88,6 +88,15 @@ export interface ActionDefinition {
   };
 }
 
+// Import AuthenticatedRequestContext from identity
+import { AuthenticatedRequestContext } from './identity';
+
+// Import ActionExecutionMetadata from execution
+import { ActionExecutionMetadata } from './execution';
+
+// Re-export for convenience
+export { AuthenticatedRequestContext, ActionExecutionMetadata };
+
 export type ActionHandler = (
   payload: NormalizedRubiContextPayload,
   utilities: ActionUtilities,
@@ -180,3 +189,6 @@ export * from './identity';
 
 // Export all metadata types from metadata.ts
 export * from './metadata';
+
+// Export all execution types from execution.ts
+export * from './execution';
