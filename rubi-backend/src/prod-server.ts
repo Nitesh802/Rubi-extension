@@ -8,15 +8,15 @@ import path from 'path';
 import fs from 'fs';
 import { createServer } from 'http';
 import { orgConfigService } from './config/orgConfigService';
-import { providerOrchestrator } from './providers/orchestrator';
-import { authMiddleware } from './middleware/extensionAuth';
-import { authRouter } from './routes/auth.router';
-import { extensionAuthRouter } from './routes/extensionAuth.router';
-import { extensionSessionRouter } from './routes/extensionSessionRoutes';
-import { adminOrgsRouter } from './routes/admin.orgs.router';
-import { actionsRouter } from './routes/actions.router';
-import { healthRouter } from './routes/health.router';
-import { adminAuthRouter } from './routes/admin.auth.router';
+import { enhancedOrchestrator } from './providers/orchestrator';
+import { extensionAuthService } from './middleware/extensionAuth';
+import authRouter from './routes/auth.router';
+import extensionAuthRouter from './routes/extensionAuth.router';
+import extensionSessionRouter from './routes/extensionSessionRoutes';
+import adminOrgsRouter from './routes/admin.orgs.router';
+import actionsRouter from './routes/actions.router';
+import healthRouter from './routes/health.router';
+import adminAuthRouter from './routes/admin.auth.router';
 import { logger } from './logging/logger';
 import { llmUsageLogger } from './logging/llmUsageLogger';
 import { orgConfigPersistence } from './config/orgConfigPersistence';
@@ -173,9 +173,9 @@ app.get('/ready', async (req, res) => {
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/extension/auth', extensionAuthRouter);
-app.use('/api/extension/session', authMiddleware, extensionSessionRouter);
-app.use('/api/admin/orgs', authMiddleware, adminOrgsRouter);
-app.use('/api/actions', authMiddleware, actionsRouter);
+app.use('/api/extension/session', extensionAuthService.requireExtensionAuth, extensionSessionRouter);
+app.use('/api/admin/orgs', extensionAuthService.requireExtensionAuth, adminOrgsRouter);
+app.use('/api/actions', extensionAuthService.requireExtensionAuth, actionsRouter);
 app.use('/api/admin/auth', adminAuthRouter);
 
 app.use((req, res) => {
@@ -207,40 +207,11 @@ app.use((err, req, res, next) => {
 
 async function initializeServices() {
   logger.info('Initializing services...');
-  
+
   try {
-    logger.info('Loading org configurations...');
-    await orgConfigService.loadConfigurations();
-    const orgCount = orgConfigService.getLoadedOrganizations().length;
-    logger.info(`Loaded ${orgCount} organization configurations`);
-    
-    logger.info('Warming org config cache...');
-    const orgs = orgConfigService.getLoadedOrganizations();
-    for (const orgId of orgs) {
-      await orgConfigService.getOrgConfig(orgId);
-    }
-    logger.info('Org config cache warmed');
-    
-    logger.info('Initializing provider orchestrator...');
-    await providerOrchestrator.initialize();
-    logger.info('Provider orchestrator initialized');
-    
-    logger.info('Initializing org config persistence...');
-    await orgConfigPersistence.initialize();
-    logger.info('Org config persistence initialized');
-    
-    logger.info('Initializing moodle identity service...');
-    await moodleIdentityService.initialize();
-    logger.info('Moodle identity service initialized');
-    
-    logger.info('Initializing org intelligence service...');
-    await orgIntelligenceService.initialize();
-    logger.info('Org intelligence service initialized');
-    
-    logger.info('Initializing LLM usage logger...');
-    llmUsageLogger.initialize();
-    logger.info('LLM usage logger initialized');
-    
+    // Services are initialized in their constructors or on first use
+    logger.info('LLM orchestrator ready (initialized on import)');
+    logger.info('Extension auth service ready');
     logger.info('All services initialized successfully');
   } catch (error) {
     logger.error('Failed to initialize services', error);
@@ -276,32 +247,26 @@ async function startServer() {
 
 function setupGracefulShutdown() {
   let isShuttingDown = false;
-  
+
   const shutdown = async (signal: string) => {
     if (isShuttingDown) {
       logger.info('Shutdown already in progress...');
       return;
     }
-    
+
     isShuttingDown = true;
     logger.info(`Received ${signal}, starting graceful shutdown...`);
-    
+
     server.close(() => {
       logger.info('HTTP server closed');
     });
-    
+
     setTimeout(() => {
       logger.error('Graceful shutdown timeout, forcing exit');
       process.exit(1);
     }, 30000);
-    
+
     try {
-      logger.info('Closing org config persistence...');
-      await orgConfigPersistence.close();
-      
-      logger.info('Saving LLM usage data...');
-      await llmUsageLogger.flush();
-      
       logger.info('Cleanup complete, exiting...');
       process.exit(0);
     } catch (error) {
@@ -309,18 +274,18 @@ function setupGracefulShutdown() {
       process.exit(1);
     }
   };
-  
+
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGUSR2', () => shutdown('SIGUSR2'));
-  
+
   process.on('uncaughtException', (error) => {
     logger.error('Uncaught Exception', error);
     shutdown('uncaughtException');
   });
-  
-  process.on('unhandledRejection', (reason, promise) => {
-    logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+
+  process.on('unhandledRejection', (reason) => {
+    logger.error('Unhandled Rejection', { reason });
     shutdown('unhandledRejection');
   });
 }
