@@ -4,7 +4,7 @@
  */
 
 import { OrgIntelligence, OrgIntelligenceSource } from '../types/orgIntelligence';
-import { logger } from '../config/logger';
+import { logger } from '../logging/logger';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { orgIntelligencePromptMapper } from './orgIntelligencePromptMapper';
