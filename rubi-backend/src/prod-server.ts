@@ -69,23 +69,12 @@ app.use(compression());
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || CORS_ALLOWED_ORIGINS.includes('*')) {
-      return callback(null, true);
-    }
-    if (CORS_ALLOWED_ORIGINS.some(allowed => {
-      if (allowed.includes('*')) {
-        const pattern = allowed.replace(/\*/g, '.*');
-        return new RegExp(`^${pattern}$`).test(origin);
-      }
-      return allowed === origin;
-    })) {
-      return callback(null, true);
-    }
-    callback(new Error('Not allowed by CORS'));
+    // Allow all origins for browser extension
+    return callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Session-Id', 'X-Org-Id'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Session-Id', 'X-Org-Id', 'X-Moodle-Url', 'X-Extension-Auth', 'X-Request-Id'],
   exposedHeaders: ['X-Request-Id', 'X-Response-Time']
 }));
 
