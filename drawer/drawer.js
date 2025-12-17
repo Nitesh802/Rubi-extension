@@ -258,24 +258,44 @@ function initializeMemoryStore() {
  * Cache DOM element references for performance
  */
 function cacheElements() {
-    drawerElement = document.getElementById('rubi-drawer');
-    
+    // Try to find drawer in shadow DOM first, then regular DOM
+    const shadowHost = document.getElementById('rubi-drawer-root');
+    const shadowRoot = shadowHost?.shadowRoot;
+
+    // Find drawer element (check shadow DOM first, then regular DOM)
+    drawerElement = shadowRoot?.getElementById('rubi-drawer') || document.getElementById('rubi-drawer');
+
+    // Find content element (check multiple selectors for compatibility)
+    const contentEl = shadowRoot?.querySelector('.rubi-drawer-content') ||
+                      shadowRoot?.getElementById('drawer-content') ||
+                      document.getElementById('drawer-content') ||
+                      document.querySelector('.drawer-content') ||
+                      document.querySelector('.rubi-drawer-content');
+
     elementsCache = {
         // Main content container for component rendering
-        drawerContent: document.getElementById('drawer-content') || document.querySelector('.drawer-content'),
-        
+        drawerContent: contentEl,
+
         // Legacy elements for compatibility
-        closeButton: document.getElementById('drawer-close'),
+        closeButton: shadowRoot?.getElementById('rubi-drawer-close') ||
+                     shadowRoot?.getElementById('drawer-close') ||
+                     document.getElementById('drawer-close'),
         minimizeButton: document.getElementById('drawer-minimize')
     };
-    
+
     // Create content container if it doesn't exist
     if (!elementsCache.drawerContent && drawerElement) {
         elementsCache.drawerContent = document.createElement('div');
         elementsCache.drawerContent.id = 'drawer-content';
-        elementsCache.drawerContent.className = 'drawer-content';
+        elementsCache.drawerContent.className = 'drawer-content rubi-drawer-content';
         drawerElement.appendChild(elementsCache.drawerContent);
     }
+
+    console.log('[Rubi Drawer] Elements cached:', {
+        hasDrawer: !!drawerElement,
+        hasContent: !!elementsCache.drawerContent,
+        usingShadowDOM: !!shadowRoot
+    });
 }
 
 /**
