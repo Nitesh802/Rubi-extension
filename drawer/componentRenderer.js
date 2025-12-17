@@ -1193,47 +1193,49 @@
 
     // Core rendering function with microcopy support
     function renderSection(componentName, dataObject) {
-        // Validate component exists
-        if (!window.RubiComponentRegistry) {
-            console.error('[Rubi Renderer] RubiComponentRegistry not loaded');
-            return document.createElement('div');
-        }
-        
-        const componentDef = window.RubiComponentRegistry.getComponent(componentName);
-        if (!componentDef) {
+        // Check if we have a local renderer first (for sub-components not in registry)
+        const localRenderer = componentRenderers[componentName];
+
+        // Get component definition from registry (optional for sub-components)
+        const componentDef = window.RubiComponentRegistry?.getComponent(componentName);
+
+        // If no local renderer and no registry definition, we can't render
+        if (!localRenderer && !componentDef) {
             console.warn('[Rubi Renderer] Component not found:', componentName);
             return document.createElement('div');
         }
-        
+
         // Apply microcopy to data
         let enhancedData = dataObject || {};
         if (window.RubiMicrocopy) {
             enhancedData = applyMicrocopyToComponentData(componentName, enhancedData);
         }
-        
-        // Validate props
-        if (!window.RubiComponentRegistry.validateProps(componentName, enhancedData)) {
-            console.warn('[Rubi Renderer] Invalid props for', componentName);
+
+        // Validate props if component is in registry
+        if (componentDef && window.RubiComponentRegistry?.validateProps) {
+            if (!window.RubiComponentRegistry.validateProps(componentName, enhancedData)) {
+                console.warn('[Rubi Renderer] Invalid props for', componentName);
+            }
         }
-        
-        // Get renderer
-        const renderer = componentRenderers[componentName];
+
+        // Get renderer - prefer local, fall back to registry
+        const renderer = localRenderer || componentDef?.renderer;
         if (!renderer) {
             console.warn('[Rubi Renderer] No renderer for', componentName);
             const fallback = document.createElement('div');
-            fallback.className = componentDef.cssClass;
+            fallback.className = componentDef?.cssClass || 'rubi-component';
             fallback.setAttribute('data-component', componentName);
             fallback.textContent = '[' + componentName + ']';
             return fallback;
         }
-        
+
         // Render component
         const element = renderer(enhancedData);
-        
+
         // Add fade-in animation
         element.style.opacity = '0';
         element.style.animation = 'fadeIn 0.3s ease-in forwards';
-        
+
         return element;
     }
 
