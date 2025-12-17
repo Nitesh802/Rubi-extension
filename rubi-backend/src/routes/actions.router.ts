@@ -399,6 +399,166 @@ router.post(
   }
 );
 
+// Alias route: POST /api/actions/execute with actionName in body
+// This matches the extension's expected path format
+router.post(
+  '/execute',
+  extensionAuthService.requireExtensionAuth,
+  securityMiddleware.rateLimiter(),
+  async (req: ExtensionAuthRequest, res: Response) => {
+    const { actionName, actionId, payload, context } = req.body;
+    const effectiveActionName = actionName || actionId;
+
+    if (!effectiveActionName) {
+      res.status(400).json({
+        success: false,
+        error: 'actionName or actionId is required in request body',
+        code: 'MISSING_ACTION_NAME',
+      });
+      return;
+    }
+
+    // Set up params for the execute handler
+    req.params.actionName = effectiveActionName;
+
+    // Ensure payload is in expected format
+    if (!req.body.payload && context) {
+      req.body.payload = context;
+    }
+
+    // Import and use the execute handler logic
+    const requestId = (req as any).requestId;
+    const startTime = Date.now();
+    const orgConfig = req.orgConfig;
+
+    const contextBuilder = createExecutionContextBuilder()
+      .setAction(effectiveActionName)
+      .setRequestId(requestId)
+      .setOrgConfigSource(req.orgConfigSource || 'unknown', orgConfig)
+      .setIdentitySource(req.identitySource || 'anonymous', req.rubiAuthContext);
+
+    try {
+      const usageCheck = usageLimiter.checkActionAllowed({
+        orgId: req.userContext?.orgId || 'unknown',
+        userId: req.userContext?.userId,
+        actionName: effectiveActionName,
+        payload,
+        orgConfig,
+      } as any);
+
+      if (!usageCheck.allowed) {
+        res.status(403).json({
+          success: false,
+          error: 'Action not allowed by policy',
+          code: 'ACTION_DISABLED_BY_POLICY',
+          requestId,
+        });
+        return;
+      }
+
+      if (!orgConfigService.isActionAllowed(orgConfig, effectiveActionName)) {
+        res.status(403).json({
+          success: false,
+          error: 'This action has been disabled by your organization administrator',
+          code: 'ACTION_DISABLED_BY_POLICY',
+          requestId,
+        });
+        return;
+      }
+
+      const action = actionRegistry.get(effectiveActionName);
+      if (!action) {
+        res.status(404).json({
+          success: false,
+          error: `Action '${effectiveActionName}' not found`,
+          requestId,
+        });
+        return;
+      }
+
+      const authContext: AuthenticatedRequestContext = req.rubiAuthContext || {
+        session: undefined,
+        isDevMode: true,
+        rawTokenClaims: req.extensionAuth,
+      };
+
+      const modelPreferences = orgConfigService.getEffectiveModelPreferences(orgConfig, effectiveActionName);
+
+      const { data: orgIntelligence, source: orgIntelligenceSource } = await orgIntelligenceService.getOrgIntelligence(
+        authContext.session?.org?.orgId || req.userContext?.orgId || null
+      );
+
+      const utilities: ActionUtilities = {
+        renderPrompt: (template, data) => {
+          const extendedData = {
+            ...data,
+            user: authContext.session?.user || null,
+            org: authContext.session?.org || null,
+            orgConfig: orgConfig ? { orgName: orgConfig.orgName, planTier: orgConfig.planTier } : null,
+            orgIntelligence: orgIntelligence ? orgIntelligenceService.getIntelligenceForPrompt(orgIntelligence, effectiveActionName) : null,
+          };
+          return templateEngine.renderTemplate(template, extendedData);
+        },
+        callLLM: async (prompt, config) => {
+          const effectiveConfig = {
+            ...config,
+            provider: modelPreferences.provider || config.provider,
+            model: modelPreferences.model || config.model,
+          };
+          return llmOrchestrator.call(prompt, effectiveConfig);
+        },
+        validateSchema: (data, schemaName) => schemaValidator.validate(data, schemaName),
+        logger,
+      };
+
+      const extendedAuthContext = { ...authContext, orgConfig, orgIntelligence };
+      const result = await actionRegistry.execute(effectiveActionName, payload || context, utilities, extendedAuthContext);
+      const duration = Date.now() - startTime;
+
+      if (result.success) {
+        usageLimiter.incrementUsage({
+          orgId: req.userContext?.orgId || 'unknown',
+          userId: req.userContext?.userId,
+          actionName: effectiveActionName,
+          payload,
+          orgConfig,
+        } as any);
+      }
+
+      logger.info('[ActionExecution] Completed via /execute alias', {
+        actionName: effectiveActionName,
+        success: result.success,
+        duration,
+        requestId
+      });
+
+      if (result.success) {
+        res.status(200).json({
+          success: true,
+          data: result.data,
+          metadata: { ...result.metadata, requestId, duration },
+        });
+      } else {
+        res.status(422).json({
+          success: false,
+          error: result.error,
+          data: result.data,
+          metadata: { ...result.metadata, requestId, duration },
+        });
+      }
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      logger.error(`Failed to execute action ${effectiveActionName}`, { error, requestId });
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        requestId,
+        metadata: { duration },
+      });
+    }
+  }
+);
+
 router.get(
   '/list',
   extensionAuthService.requireExtensionAuth,
