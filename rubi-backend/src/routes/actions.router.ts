@@ -406,13 +406,14 @@ router.post(
   extensionAuthService.requireExtensionAuth,
   securityMiddleware.rateLimiter(),
   async (req: ExtensionAuthRequest, res: Response) => {
-    const { actionName, actionId, payload, context } = req.body;
-    const effectiveActionName = actionName || actionId;
+    const { actionName, actionId, action, payload, context } = req.body;
+    // Support multiple field names: actionName, actionId, or action
+    const effectiveActionName = actionName || actionId || action;
 
     if (!effectiveActionName) {
       res.status(400).json({
         success: false,
-        error: 'actionName or actionId is required in request body',
+        error: 'actionName, actionId, or action is required in request body',
         code: 'MISSING_ACTION_NAME',
       });
       return;
@@ -421,7 +422,7 @@ router.post(
     // Set up params for the execute handler
     req.params.actionName = effectiveActionName;
 
-    // Ensure payload is in expected format
+    // Ensure payload is in expected format (extension sends 'context', backend expects 'payload')
     if (!req.body.payload && context) {
       req.body.payload = context;
     }
