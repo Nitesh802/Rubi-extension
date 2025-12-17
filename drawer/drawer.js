@@ -302,10 +302,20 @@ function cacheElements() {
  * Set up basic event listeners (for minimal mode)
  */
 function setupBasicEventListeners() {
-    // Close button
-    const closeBtn = drawerElement?.querySelector('#drawer-close');
+    // Get shadow root if available
+    const shadowHost = document.getElementById('rubi-drawer-root');
+    const shadowRoot = shadowHost?.shadowRoot;
+
+    // Close button - check multiple IDs and locations
+    const closeBtn = shadowRoot?.getElementById('rubi-drawer-close') ||
+                     shadowRoot?.querySelector('#drawer-close') ||
+                     drawerElement?.querySelector('#rubi-drawer-close') ||
+                     drawerElement?.querySelector('#drawer-close');
     if (closeBtn) {
         closeBtn.addEventListener('click', closeDrawer);
+        console.log('[Rubi Drawer] Close button listener attached');
+    } else {
+        console.warn('[Rubi Drawer] Close button not found for event listener');
     }
 }
 
@@ -1273,6 +1283,8 @@ function openDrawer() {
     if (needsRecache) {
         console.log('[Rubi Drawer] Re-caching elements on open...');
         cacheElements();
+        // Set up event listeners after re-caching
+        setupBasicEventListeners();
     }
 
     drawerState.isOpen = true;
