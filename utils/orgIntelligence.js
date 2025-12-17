@@ -3,7 +3,7 @@
  * Single source of truth for organization-specific personalization
  */
 
-export const OrgIntelligenceSchema = {
+const OrgIntelligenceSchema = {
   // 1. Company Identity
   companyIdentity: {
     companyName: '',
@@ -72,7 +72,7 @@ export const OrgIntelligenceSchema = {
 /**
  * Default Org Intelligence (Fused demo data)
  */
-export const defaultOrgIntelligence = {
+const defaultOrgIntelligence = {
   companyIdentity: {
     companyName: 'Fused',
     companyDescription: 'Boutique consulting and technology firm specializing in sales enablement through customized learning platforms, AI-powered coaching tools, and performance intelligence systems for B2B enterprise revenue teams',
@@ -1224,5 +1224,14 @@ class OrgIntelligenceManager {
   }
 }
 
-// Export singleton instance
-export const orgIntelligence = new OrgIntelligenceManager();
+// Create singleton instance and export to window
+const orgIntelligence = new OrgIntelligenceManager();
+
+// Export to global namespace for browser extension use
+if (typeof window !== 'undefined') {
+  window.OrgIntelligenceSchema = OrgIntelligenceSchema;
+  window.defaultOrgIntelligence = defaultOrgIntelligence;
+  window.orgIntelligence = orgIntelligence;
+}
+
+console.log('[Rubi] Org Intelligence module loaded');

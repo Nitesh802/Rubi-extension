@@ -961,8 +961,7 @@ if (typeof window !== 'undefined') {
       if (!response.ok) {
         if (response.status === 404) {
           // Return default intelligence if none configured
-          const { defaultOrgIntelligence } = await import('./orgIntelligence.js');
-          return defaultOrgIntelligence;
+          return window.defaultOrgIntelligence || {};
         }
         throw new Error(`Failed to fetch org intelligence: HTTP ${response.status}`);
       }
