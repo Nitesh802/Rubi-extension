@@ -1268,11 +1268,23 @@ function toggleMinimize() {
  * Open drawer
  */
 function openDrawer() {
+    // Re-cache elements if not found initially (handles late injection)
+    if (!drawerElement || !elementsCache.drawerContent) {
+        console.log('[Rubi Drawer] Re-caching elements on open...');
+        cacheElements();
+    }
+
     drawerState.isOpen = true;
     if (drawerElement) {
         drawerElement.classList.add('open');
     }
     console.log('[Rubi Drawer] Drawer opened');
+
+    // Try to render content if we now have the elements
+    if (elementsCache.drawerContent && !elementsCache.drawerContent.hasChildNodes()) {
+        console.log('[Rubi Drawer] Rendering content after late element discovery');
+        loadInitialState();
+    }
 }
 
 /**
