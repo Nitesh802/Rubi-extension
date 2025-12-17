@@ -378,7 +378,7 @@
 
     // Build component props from binding configuration with microcopy
     function buildComponentPropsFromBinding(binding, data, payload, componentName) {
-        const props = {};
+        let props = {};
         
         // Add static props first
         if (binding.staticProps) {
