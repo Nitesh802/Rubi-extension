@@ -1269,7 +1269,8 @@ function toggleMinimize() {
  */
 function openDrawer() {
     // Re-cache elements if not found initially (handles late injection)
-    if (!drawerElement || !elementsCache.drawerContent) {
+    const needsRecache = !drawerElement || !elementsCache.drawerContent;
+    if (needsRecache) {
         console.log('[Rubi Drawer] Re-caching elements on open...');
         cacheElements();
     }
@@ -1280,8 +1281,9 @@ function openDrawer() {
     }
     console.log('[Rubi Drawer] Drawer opened');
 
-    // Try to render content if we now have the elements
-    if (elementsCache.drawerContent && !elementsCache.drawerContent.hasChildNodes()) {
+    // Try to render content if we just re-cached elements or content has only placeholder
+    const hasOnlyPlaceholder = elementsCache.drawerContent?.querySelector('.rubi-placeholder');
+    if (elementsCache.drawerContent && (needsRecache || hasOnlyPlaceholder)) {
         console.log('[Rubi Drawer] Rendering content after late element discovery');
         loadInitialState();
     }
