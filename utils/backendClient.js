@@ -528,7 +528,12 @@ async function getAuthHeaders() {
     'X-Rubi-Version': '1.0.0',
     'X-Extension-Token': BACKEND_CONFIG.extensionAuthToken
   };
-  
+
+  // Add JWT token from handshake if available
+  if (authState.currentToken) {
+    headers['Authorization'] = `Bearer ${authState.currentToken}`;
+  }
+
   // Phase 10B: Add Moodle identity JWT if available
   if (window.RubiSessionBridge) {
     try {
