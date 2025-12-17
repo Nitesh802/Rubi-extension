@@ -10,16 +10,19 @@
 // Phase 10B: Configuration with environment support
 const BACKEND_CONFIG = {
   // Base URL for the backend API (will be overridden by environment config)
-  baseUrl: window.RubiEnvironment?.getBackendUrl() || 'http://localhost:3000',
+  baseUrl: window.RubiEnvironment?.getBackendUrl() || 'https://ai.fus-ed.com',
   // Moodle URL (will be overridden by environment config)
   moodleUrl: window.RubiEnvironment?.getMoodleUrl() || 'http://localhost:8080',
-  
+
   // Request timeout in milliseconds
   timeoutMs: 120000, // 2 minutes
-  
+
   // Phase 10B: Extension authentication token
   extensionAuthToken: window.RubiEnvironment?.getAuthToken() || 'TOKEN_GOES_HERE',
-  
+
+  // Phase 9A: Extension shared secret for handshake authentication
+  extensionSharedSecret: '13896cf86cf6162a0bf81571c5de290f69bd4c76d8bef4746f1fa4a50a193b04',
+
   // Phase 9A: Development fallback settings
   allowDevFallback: true, // Allow fallback to dev mode if auth fails
   devToken: 'DEV_STATIC_TOKEN_REPLACE_ME', // Legacy dev token for backwards compatibility
@@ -525,7 +528,12 @@ async function getAuthHeaders() {
     'X-Rubi-Version': '1.0.0',
     'X-Extension-Token': BACKEND_CONFIG.extensionAuthToken
   };
-  
+
+  // Add JWT token from handshake if available
+  if (authState.currentToken) {
+    headers['Authorization'] = `Bearer ${authState.currentToken}`;
+  }
+
   // Phase 10B: Add Moodle identity JWT if available
   if (window.RubiSessionBridge) {
     try {
@@ -953,8 +961,7 @@ if (typeof window !== 'undefined') {
       if (!response.ok) {
         if (response.status === 404) {
           // Return default intelligence if none configured
-          const { defaultOrgIntelligence } = await import('./orgIntelligence.js');
-          return defaultOrgIntelligence;
+          return window.defaultOrgIntelligence || {};
         }
         throw new Error(`Failed to fetch org intelligence: HTTP ${response.status}`);
       }

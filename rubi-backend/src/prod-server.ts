@@ -67,27 +67,19 @@ app.use(helmet({
 
 app.use(compression());
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || CORS_ALLOWED_ORIGINS.includes('*')) {
-      return callback(null, true);
-    }
-    if (CORS_ALLOWED_ORIGINS.some(allowed => {
-      if (allowed.includes('*')) {
-        const pattern = allowed.replace(/\*/g, '.*');
-        return new RegExp(`^${pattern}$`).test(origin);
-      }
-      return allowed === origin;
-    })) {
-      return callback(null, true);
-    }
-    callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Session-Id', 'X-Org-Id'],
-  exposedHeaders: ['X-Request-Id', 'X-Response-Time']
-}));
+// Allow all CORS - required for browser extension
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', req.headers['access-control-request-headers'] || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Expose-Headers', 'X-Request-Id, X-Response-Time');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 const limiter = rateLimit({
   windowMs: RATE_LIMIT_WINDOW,
@@ -173,6 +165,8 @@ app.get('/ready', async (req, res) => {
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/extension/auth', extensionAuthRouter);
+// Alias for extension compatibility - extension calls /api/auth/extension/...
+app.use('/api/auth/extension', extensionAuthRouter);
 app.use('/api/extension/session', extensionAuthService.requireExtensionAuth, extensionSessionRouter);
 app.use('/api/admin/orgs', extensionAuthService.requireExtensionAuth, adminOrgsRouter);
 app.use('/api/actions', extensionAuthService.requireExtensionAuth, actionsRouter);

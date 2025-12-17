@@ -1318,6 +1318,7 @@
         
         // Utility functions
         clearContainer: function(container) {
+            if (!container) return;
             while (container.firstChild) {
                 container.removeChild(container.firstChild);
             }
