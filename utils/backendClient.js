@@ -21,7 +21,7 @@ const BACKEND_CONFIG = {
   extensionAuthToken: window.RubiEnvironment?.getAuthToken() || 'TOKEN_GOES_HERE',
 
   // Phase 9A: Extension shared secret for handshake authentication
-  extensionSharedSecret: 'dev-extension-secret-key',
+  extensionSharedSecret: 'dev-extension-secret',
 
   // Phase 9A: Development fallback settings
   allowDevFallback: true, // Allow fallback to dev mode if auth fails
