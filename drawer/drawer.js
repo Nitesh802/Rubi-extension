@@ -618,19 +618,25 @@ function renderDrawerContent(payload) {
     
     // Transform payload for component consumption
     const transformedPayload = transformPayloadForComponents(payload);
-    
+
+    // Check if drawer content element exists
+    if (!elementsCache.drawerContent) {
+        console.warn('[Rubi Drawer] Drawer content element not ready, skipping render');
+        return;
+    }
+
     // Clear existing content
     window.RubiComponentRenderer.clearContainer(elementsCache.drawerContent);
-    
+
     // Apply layout template
     const renderedContent = window.RubiComponentRenderer.applyLayoutTemplate(
         layoutTemplate,
         transformedPayload
     );
-    
+
     // Append to drawer
     elementsCache.drawerContent.appendChild(renderedContent);
-    
+
     // Setup component event handlers
     setupComponentEventHandlers();
 }
@@ -1267,13 +1273,13 @@ function closeDrawer() {
  */
 function showLoading(message = 'Loading...') {
     // Create loading indicator using InsightCard if available
-    if (window.RubiComponentRenderer) {
+    if (window.RubiComponentRenderer && elementsCache.drawerContent) {
         const loadingData = {
             title: 'Processing',
             content: message,
             icon: '⏳'
         };
-        
+
         const loadingCard = window.RubiComponentRenderer.renderSection('InsightCard', loadingData);
         loadingCard.id = 'loading-indicator';
         elementsCache.drawerContent.insertBefore(loadingCard, elementsCache.drawerContent.firstChild);

@@ -1034,10 +1034,11 @@ class OrgIntelligenceManager {
    */
   async fetchIntelligence() {
     try {
-      // Try to fetch from backend
-      const response = await fetch(`${this.getBackendUrl()}/api/org-intelligence`, {
+      // Try to fetch from backend - use RubiBackendClient's backend URL if available
+      const backendUrl = window.RubiBackendClient?.getConfig()?.baseUrl || 'https://ai.fus-ed.com';
+      const response = await fetch(`${backendUrl}/api/org-intelligence`, {
         headers: {
-          'Authorization': `Bearer ${await this.getApiToken()}`
+          'Content-Type': 'application/json'
         }
       });
 
