@@ -24,20 +24,27 @@
                     }
                 },
                 {
-                    component: 'OpportunitySummaryCard',
+                    component: 'ProfileCard',
                     dataKey: 'profile',
                     defaultData: {
-                        title: 'Profile Overview',
-                        rows: []
+                        title: 'Profile Overview'
                     }
                 },
                 {
                     component: 'InsightCard',
                     dataKey: 'insights.profile',
                     defaultData: {
-                        title: 'Key Insights',
+                        title: 'AI Summary',
                         content: 'Analyzing profile...',
                         icon: '💡'
+                    }
+                },
+                {
+                    component: 'TalkingPointsCard',
+                    dataKey: 'talkingPointsDisplay',
+                    defaultData: {
+                        title: 'Key Talking Points',
+                        items: []
                     }
                 },
                 {
@@ -56,16 +63,16 @@
                     component: 'RecommendedContentCard',
                     dataKey: 'recommendations',
                     defaultData: {
-                        title: 'Recommended Actions',
+                        title: 'Engagement Ideas',
                         items: []
                     }
                 },
                 {
                     component: 'DrawerFooterButton',
                     staticData: {
-                        label: 'Generate Outreach',
+                        label: 'Open Full Analysis in SuccessLAB',
                         variant: 'primary',
-                        icon: '✨'
+                        icon: '📊'
                     }
                 }
             ]

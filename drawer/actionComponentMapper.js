@@ -376,8 +376,102 @@
                 }
             });
         }
-        
+
+        // Transform backend data to UI component format
+        merged = transformBackendDataForUI(merged);
+
         return merged;
+    }
+
+    // Transform backend AI response to UI component expected format
+    function transformBackendDataForUI(data) {
+        const transformed = { ...data };
+
+        // Transform summary to profile overview for InsightCard
+        if (data.summary && !transformed.insights) {
+            transformed.insights = {
+                profile: {
+                    title: 'Profile Summary',
+                    content: data.summary,
+                    icon: '💡'
+                }
+            };
+        }
+
+        // Transform keyInsights to insight items
+        if (data.keyInsights && Array.isArray(data.keyInsights)) {
+            if (!transformed.insights) transformed.insights = {};
+            transformed.insights.items = data.keyInsights.map((insight, idx) => ({
+                type: 'info',
+                text: insight,
+                confidence: 'high'
+            }));
+        }
+
+        // Transform opportunities to rows for OpportunitySummaryCard
+        if (data.opportunities && Array.isArray(data.opportunities)) {
+            transformed.opportunityRows = data.opportunities.map(opp => ({
+                label: opp.type || 'Opportunity',
+                value: opp.description,
+                detail: opp.actionPlan
+            }));
+        }
+
+        // Transform talkingPoints for display
+        if (data.talkingPoints && Array.isArray(data.talkingPoints)) {
+            transformed.talkingPointsDisplay = data.talkingPoints.map(tp => ({
+                title: tp.topic,
+                content: tp.opener,
+                detail: tp.relevance,
+                type: 'talking_point'
+            }));
+        }
+
+        // Transform engagementIdeas to recommendations
+        if (data.engagementIdeas && Array.isArray(data.engagementIdeas)) {
+            transformed.recommendations = {
+                title: 'Recommended Actions',
+                items: data.engagementIdeas.map(idea => ({
+                    label: idea.type || 'Action',
+                    description: idea.content,
+                    timing: idea.timing,
+                    outcome: idea.expectedOutcome,
+                    icon: idea.type === 'message' ? '✉️' :
+                          idea.type === 'connection' ? '🤝' :
+                          idea.type === 'endorsement' ? '👍' : '💡'
+                }))
+            };
+        }
+
+        // Transform risks for display
+        if (data.risks && Array.isArray(data.risks)) {
+            transformed.risksDisplay = data.risks.map(risk => ({
+                type: risk.type,
+                description: risk.description,
+                mitigation: risk.mitigation,
+                severity: 'medium'
+            }));
+        }
+
+        // Set profile data for EmailContextCard
+        if (data.fields) {
+            transformed.profile = transformed.profile || {};
+            transformed.profile.fullName = data.fields.fullName;
+            transformed.profile.headline = data.fields.headline;
+            transformed.profile.company = data.fields.company || extractCompanyFromHeadline(data.fields.headline);
+            transformed.profile.location = data.fields.location;
+        }
+
+        return transformed;
+    }
+
+    // Helper to extract company from headline
+    function extractCompanyFromHeadline(headline) {
+        if (!headline) return null;
+        // Try to extract company after "at" or "@"
+        const atMatch = headline.match(/(?:at|@)\s+(.+?)(?:,|$)/i);
+        if (atMatch) return atMatch[1].trim();
+        return null;
     }
 
     // Build component props from binding configuration with microcopy

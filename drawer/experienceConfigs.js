@@ -26,10 +26,14 @@
                         showRefresh: true
                     }
                 },
-                EmailContextCard: {
-                    recipientPath: 'profile.fullName',
-                    emailPath: 'profile.email',
-                    companyPath: 'profile.company'
+                ProfileSummaryCard: {
+                    namePath: 'profile.fullName',
+                    headlinePath: 'profile.headline',
+                    locationPath: 'profile.location',
+                    summaryPath: 'summary',
+                    staticProps: {
+                        title: 'Profile Overview'
+                    }
                 },
                 UserMessageCard: {
                     titlePath: 'messageCard.title',
