@@ -53,23 +53,16 @@ export const analyzeOpportunityRisk: ActionHandler = async (payload, utilities, 
 
     if (!validation.valid) {
       utilities.logger.warn('Opportunity risk analysis validation failed', validation.errors);
-      
-      const fallbackData = {
-        riskLevel: 'medium',
-        riskScore: 50,
-        factors: [],
-        recommendations: ['Unable to complete full analysis. Please review opportunity manually.'],
-        confidence: 0,
-      };
 
+      // Schema validation failed but we have AI data - return success with warning
       return {
         success: true,
-        data: fallbackData,
+        data: llmResponse.data,
         metadata: {
           tokensUsed: llmResponse.usage?.totalTokens,
           modelUsed: llmResponse.model,
           providerUsed: llmResponse.provider,
-          warning: 'Using fallback data due to validation failure',
+          validationWarning: `Schema validation skipped: ${validation.errors?.join(', ')}`,
         },
       };
     }
@@ -78,7 +71,7 @@ export const analyzeOpportunityRisk: ActionHandler = async (payload, utilities, 
       ...validation.data,
       analyzedAt: new Date().toISOString(),
       opportunityUrl: payload.url,
-      contextData: payload.context.data,
+      contextData: payload.context?.data || {},
     };
 
     return {

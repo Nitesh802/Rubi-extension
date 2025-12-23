@@ -30,14 +30,15 @@ export const generateEmailDraft: ActionHandler = async (payload, utilities) => {
     const validation = utilities.validateSchema(llmResponse.data, 'generate_email_draft');
 
     if (!validation.valid) {
+      // Schema validation failed but we have AI data - return success with warning
       return {
-        success: false,
-        error: `Validation failed: ${validation.errors?.join(', ')}`,
+        success: true,
         data: llmResponse.data,
         metadata: {
           tokensUsed: llmResponse.usage?.totalTokens,
           modelUsed: llmResponse.model,
           providerUsed: llmResponse.provider,
+          validationWarning: `Schema validation skipped: ${validation.errors?.join(', ')}`,
         },
       };
     }

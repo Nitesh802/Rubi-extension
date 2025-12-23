@@ -61,7 +61,7 @@ export const getDashboardInsights: ActionHandler = async (payload, utilities, au
       ...insightsData,
       generatedAt: new Date().toISOString(),
       dashboardUrl: payload.url,
-      dataPoints: Object.keys(payload.context.data).length,
+      dataPoints: Object.keys(payload.context?.data || {}).length,
     };
 
     return {
