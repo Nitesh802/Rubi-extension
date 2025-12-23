@@ -295,9 +295,10 @@ async function requestExtraction() {
 
   if (window.RubiContextExtractor?.extractContext) {
     try {
-      // Get platform info if available
-      const platform = window.RubiPlatformDetector?.detectPlatform?.() || { platform: 'unknown', pageType: 'default' };
-      const result = await window.RubiContextExtractor.extractContext(platform.platform, platform.pageType);
+      // Get platform details (getPlatformDetails returns {platform, pageType, metadata})
+      const details = await window.RubiPlatformDetector?.getPlatformDetails?.() || { platform: 'unknown', pageType: 'unknown' };
+      console.log('[Rubi Bridge] Platform detected:', details.platform, '/', details.pageType);
+      const result = await window.RubiContextExtractor.extractContext(details.platform, details.pageType);
       console.log('[Rubi Bridge] Extraction completed');
       return result;
     } catch (error) {
