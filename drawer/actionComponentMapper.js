@@ -353,10 +353,10 @@
 
     // Merge action results into single data object
     function mergeActionResults(actionResults, payload) {
-        const merged = {
+        let merged = {
             // Include original context
             context: payload,
-            
+
             // Platform and page info
             platform: payload?.platform,
             pageType: payload?.pageType,
