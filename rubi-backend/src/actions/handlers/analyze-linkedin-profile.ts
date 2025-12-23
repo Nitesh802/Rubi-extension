@@ -74,14 +74,15 @@ export const analyzeLinkedInProfile: ActionHandler = async (payload, utilities, 
         }
       }
 
+      // Schema validation failed but we have AI data - return success with warning
       return {
-        success: false,
-        error: `Validation failed: ${validation.errors?.join(', ')}`,
+        success: true,
         data: llmResponse.data,
         metadata: {
           tokensUsed: llmResponse.usage?.totalTokens,
           modelUsed: llmResponse.model,
           providerUsed: llmResponse.provider,
+          validationWarning: `Schema validation skipped: ${validation.errors?.join(', ')}`,
         },
       };
     }

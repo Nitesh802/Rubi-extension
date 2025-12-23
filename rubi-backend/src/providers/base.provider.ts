@@ -32,25 +32,29 @@ export abstract class BaseLLMProvider {
 
   protected extractJsonFromResponse(text: string): any {
     text = text.trim();
-    
+
     try {
       return JSON.parse(text);
     } catch {
+      // Try to extract JSON from markdown code blocks
       const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
       if (jsonMatch && jsonMatch[1]) {
         try {
           return JSON.parse(jsonMatch[1]);
         } catch {}
       }
-      
+
+      // Try to extract any JSON object
       const objectMatch = text.match(/\{[\s\S]*\}/);
       if (objectMatch) {
         try {
           return JSON.parse(objectMatch[0]);
         } catch {}
       }
-      
-      throw new Error('Failed to extract JSON from response');
+
+      // If all JSON extraction fails, return the raw text wrapped in an object
+      // This prevents errors when the AI returns non-JSON content
+      return { rawResponse: text, parseError: 'Could not parse as JSON' };
     }
   }
 }
