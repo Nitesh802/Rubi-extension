@@ -914,6 +914,129 @@
             return button;
         },
 
+        ProfileCard: function(data) {
+            const card = document.createElement('div');
+            card.className = 'rubi-profile-card';
+            card.setAttribute('data-component', 'ProfileCard');
+
+            if (data.title) {
+                const title = document.createElement('h3');
+                title.textContent = data.title;
+                card.appendChild(title);
+            }
+
+            if (data.fullName) {
+                const name = document.createElement('div');
+                name.className = 'rubi-profile-name';
+                name.textContent = data.fullName;
+                card.appendChild(name);
+            }
+
+            if (data.headline) {
+                const headline = document.createElement('div');
+                headline.className = 'rubi-profile-headline';
+                headline.textContent = data.headline;
+                card.appendChild(headline);
+            }
+
+            if (data.location) {
+                const location = document.createElement('div');
+                location.className = 'rubi-profile-location';
+                location.textContent = '📍 ' + data.location;
+                card.appendChild(location);
+            }
+
+            if (data.company) {
+                const company = document.createElement('div');
+                company.className = 'rubi-profile-company';
+                company.textContent = '🏢 ' + data.company;
+                card.appendChild(company);
+            }
+
+            return card;
+        },
+
+        TalkingPointsCard: function(data) {
+            const card = document.createElement('div');
+            card.className = 'rubi-talking-points-card';
+            card.setAttribute('data-component', 'TalkingPointsCard');
+
+            const title = document.createElement('h3');
+            title.textContent = data.title || 'Key Talking Points';
+            card.appendChild(title);
+
+            if (data && Array.isArray(data) && data.length > 0) {
+                const list = document.createElement('div');
+                list.className = 'rubi-talking-points-list';
+
+                data.forEach((point, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'rubi-talking-point';
+
+                    const topicDiv = document.createElement('div');
+                    topicDiv.className = 'rubi-tp-topic';
+                    topicDiv.textContent = point.title || point.topic || `Point ${idx + 1}`;
+                    item.appendChild(topicDiv);
+
+                    if (point.content || point.opener) {
+                        const openerDiv = document.createElement('div');
+                        openerDiv.className = 'rubi-tp-opener';
+                        openerDiv.textContent = point.content || point.opener;
+                        item.appendChild(openerDiv);
+                    }
+
+                    if (point.detail || point.relevance) {
+                        const detailDiv = document.createElement('div');
+                        detailDiv.className = 'rubi-tp-detail';
+                        detailDiv.textContent = point.detail || point.relevance;
+                        item.appendChild(detailDiv);
+                    }
+
+                    list.appendChild(item);
+                });
+
+                card.appendChild(list);
+            } else if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+                const list = document.createElement('div');
+                list.className = 'rubi-talking-points-list';
+
+                data.items.forEach((point, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'rubi-talking-point';
+
+                    const topicDiv = document.createElement('div');
+                    topicDiv.className = 'rubi-tp-topic';
+                    topicDiv.textContent = point.title || point.topic || `Point ${idx + 1}`;
+                    item.appendChild(topicDiv);
+
+                    if (point.content || point.opener) {
+                        const openerDiv = document.createElement('div');
+                        openerDiv.className = 'rubi-tp-opener';
+                        openerDiv.textContent = point.content || point.opener;
+                        item.appendChild(openerDiv);
+                    }
+
+                    if (point.detail || point.relevance) {
+                        const detailDiv = document.createElement('div');
+                        detailDiv.className = 'rubi-tp-detail';
+                        detailDiv.textContent = point.detail || point.relevance;
+                        item.appendChild(detailDiv);
+                    }
+
+                    list.appendChild(item);
+                });
+
+                card.appendChild(list);
+            } else {
+                const emptyState = document.createElement('p');
+                emptyState.className = 'rubi-empty-state';
+                emptyState.textContent = 'No talking points available';
+                card.appendChild(emptyState);
+            }
+
+            return card;
+        },
+
         RecommendedContentCard: function(data) {
             const card = document.createElement('div');
             card.className = 'rubi-recommended-card';
@@ -947,43 +1070,62 @@
         RecommendedContentItem: function(data) {
             const item = document.createElement('div');
             item.className = 'rubi-recommended-item';
-            
+
             const header = document.createElement('div');
             header.className = 'rubi-item-header';
-            
+
+            // Support both title and label (from engagementIdeas)
+            if (data.icon) {
+                const icon = document.createElement('span');
+                icon.className = 'rubi-icon';
+                icon.textContent = data.icon;
+                header.appendChild(icon);
+            }
+
             const title = document.createElement('span');
             title.className = 'rubi-title';
-            title.textContent = data.title;
+            title.textContent = data.title || data.label || 'Action';
             header.appendChild(title);
-            
-            const type = document.createElement('span');
-            type.className = 'rubi-type';
-            type.textContent = data.type;
-            header.appendChild(type);
-            
+
+            if (data.type || data.timing) {
+                const type = document.createElement('span');
+                type.className = 'rubi-type';
+                type.textContent = data.type || data.timing || '';
+                header.appendChild(type);
+            }
+
             item.appendChild(header);
-            
-            if (data.preview) {
+
+            // Support both preview and description
+            if (data.preview || data.description) {
                 const preview = document.createElement('p');
                 preview.className = 'rubi-preview';
-                preview.textContent = data.preview;
+                preview.textContent = data.preview || data.description;
                 item.appendChild(preview);
             }
-            
+
+            // Support outcome from engagementIdeas
+            if (data.outcome) {
+                const outcome = document.createElement('p');
+                outcome.className = 'rubi-outcome';
+                outcome.textContent = '→ ' + data.outcome;
+                item.appendChild(outcome);
+            }
+
             if (data.relevance) {
                 const relevance = document.createElement('span');
                 relevance.className = 'rubi-relevance';
                 relevance.textContent = data.relevance + '% ' + window.RubiMicrocopy.getLabel('DATA_RELEVANCE', 'relevant');
                 item.appendChild(relevance);
             }
-            
+
             if (data.url) {
                 item.style.cursor = 'pointer';
                 item.addEventListener('click', function() {
                     window.open(data.url, '_blank');
                 });
             }
-            
+
             return item;
         },
 
