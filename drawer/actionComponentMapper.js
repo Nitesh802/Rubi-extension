@@ -367,8 +367,12 @@
         if (Array.isArray(actionResults)) {
             actionResults.forEach(result => {
                 if (result && result.stubData) {
-                    // Merge stub data directly into root
+                    // Merge stub data directly into root (local stubs)
                     Object.assign(merged, result.stubData);
+                }
+                if (result && result.data) {
+                    // Merge data from backend response
+                    Object.assign(merged, result.data);
                 }
             });
         }

@@ -49,8 +49,8 @@
                 },
                 AISuggestionsCard: {
                     titlePath: 'suggestionsCard.title',
-                    suggestionsPath: 'interactionIdeas',
-                    countPath: 'interactionIdeas.length',
+                    suggestionsPath: 'engagementIdeas',
+                    countPath: 'engagementIdeas.length',
                     staticProps: {
                         title: 'Engagement Ideas',
                         footerButton: {
