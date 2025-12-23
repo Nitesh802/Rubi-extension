@@ -492,9 +492,10 @@ router.post(
 
       const utilities: ActionUtilities = {
         renderPrompt: (template, data) => {
+          const sessionUser = authContext.session?.user;
           const extendedData = {
             ...data,
-            user: authContext.session?.user || null,
+            user: sessionUser ? { id: sessionUser.userId || 'unknown', ...sessionUser } : { id: 'unknown' },
             org: authContext.session?.org || null,
             orgConfig: orgConfig ? { orgName: orgConfig.orgName, planTier: orgConfig.planTier } : null,
             orgIntelligence: orgIntelligence ? orgIntelligenceService.getIntelligenceForPrompt(orgIntelligence, effectiveActionName) : null,
@@ -502,9 +503,9 @@ router.post(
           return templateEngine.renderTemplate(template, extendedData);
         },
         callLLM: async (prompt, config) => {
-          const effectiveConfig = {
+          const effectiveConfig: Partial<LLMConfig> = {
             ...config,
-            provider: modelPreferences.provider || config.provider,
+            provider: (modelPreferences.provider || config.provider) as LLMProvider,
             model: modelPreferences.model || config.model,
           };
           return llmOrchestrator.call(prompt, effectiveConfig);
