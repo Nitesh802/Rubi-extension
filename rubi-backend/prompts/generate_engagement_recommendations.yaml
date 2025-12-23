@@ -14,8 +14,8 @@ model:
   fallbackProviders:
     - provider: google
       name: gemini-2.0-pro
-    - provider: openai
-      name: gpt-4-turbo-preview
+    - provider: anthropic
+      name: claude-sonnet-4-20250514
 systemPrompt: |
   You are an expert engagement strategist specializing in professional relationship building and communication.
   Your role is to generate highly personalized, contextual engagement recommendations that drive meaningful connections.

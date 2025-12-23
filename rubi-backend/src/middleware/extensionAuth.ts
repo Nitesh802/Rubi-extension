@@ -299,7 +299,9 @@ export class ExtensionAuthService {
           };
           
           // Load org config for dev mode
-          req.orgConfig = await orgConfigService.getOrgConfig('techcorp');
+          const orgConfigResult = await orgConfigService.getOrgConfig('techcorp');
+          req.orgConfig = orgConfigResult.config;
+          req.orgConfigSource = orgConfigResult.source;
           
           next();
           return;
@@ -426,7 +428,7 @@ export class ExtensionAuthService {
       if (rubiPayload) {
         const authContext = this.buildAuthContext(rubiPayload);
         req.rubiAuthContext = authContext;
-        req.extensionAuth = rubiPayload;
+        req.extensionAuth = rubiPayload as ExtensionAuthPayload;
         req.userContext = {
           userId: rubiPayload.userId || 'unknown',
           orgId: rubiPayload.orgId || 'unknown',

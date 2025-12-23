@@ -258,34 +258,64 @@ function initializeMemoryStore() {
  * Cache DOM element references for performance
  */
 function cacheElements() {
-    drawerElement = document.getElementById('rubi-drawer');
-    
+    // Try to find drawer in shadow DOM first, then regular DOM
+    const shadowHost = document.getElementById('rubi-drawer-root');
+    const shadowRoot = shadowHost?.shadowRoot;
+
+    // Find drawer element (check shadow DOM first, then regular DOM)
+    drawerElement = shadowRoot?.getElementById('rubi-drawer') || document.getElementById('rubi-drawer');
+
+    // Find content element (check multiple selectors for compatibility)
+    const contentEl = shadowRoot?.querySelector('.rubi-drawer-content') ||
+                      shadowRoot?.getElementById('drawer-content') ||
+                      document.getElementById('drawer-content') ||
+                      document.querySelector('.drawer-content') ||
+                      document.querySelector('.rubi-drawer-content');
+
     elementsCache = {
         // Main content container for component rendering
-        drawerContent: document.getElementById('drawer-content') || document.querySelector('.drawer-content'),
-        
+        drawerContent: contentEl,
+
         // Legacy elements for compatibility
-        closeButton: document.getElementById('drawer-close'),
+        closeButton: shadowRoot?.getElementById('rubi-drawer-close') ||
+                     shadowRoot?.getElementById('drawer-close') ||
+                     document.getElementById('drawer-close'),
         minimizeButton: document.getElementById('drawer-minimize')
     };
-    
+
     // Create content container if it doesn't exist
     if (!elementsCache.drawerContent && drawerElement) {
         elementsCache.drawerContent = document.createElement('div');
         elementsCache.drawerContent.id = 'drawer-content';
-        elementsCache.drawerContent.className = 'drawer-content';
+        elementsCache.drawerContent.className = 'drawer-content rubi-drawer-content';
         drawerElement.appendChild(elementsCache.drawerContent);
     }
+
+    console.log('[Rubi Drawer] Elements cached:', {
+        hasDrawer: !!drawerElement,
+        hasContent: !!elementsCache.drawerContent,
+        usingShadowDOM: !!shadowRoot
+    });
 }
 
 /**
  * Set up basic event listeners (for minimal mode)
  */
 function setupBasicEventListeners() {
-    // Close button
-    const closeBtn = drawerElement?.querySelector('#drawer-close');
+    // Get shadow root if available
+    const shadowHost = document.getElementById('rubi-drawer-root');
+    const shadowRoot = shadowHost?.shadowRoot;
+
+    // Close button - check multiple IDs and locations
+    const closeBtn = shadowRoot?.getElementById('rubi-drawer-close') ||
+                     shadowRoot?.querySelector('#drawer-close') ||
+                     drawerElement?.querySelector('#rubi-drawer-close') ||
+                     drawerElement?.querySelector('#drawer-close');
     if (closeBtn) {
         closeBtn.addEventListener('click', closeDrawer);
+        console.log('[Rubi Drawer] Close button listener attached');
+    } else {
+        console.warn('[Rubi Drawer] Close button not found for event listener');
     }
 }
 
@@ -618,19 +648,25 @@ function renderDrawerContent(payload) {
     
     // Transform payload for component consumption
     const transformedPayload = transformPayloadForComponents(payload);
-    
+
+    // Check if drawer content element exists
+    if (!elementsCache.drawerContent) {
+        console.warn('[Rubi Drawer] Drawer content element not ready, skipping render');
+        return;
+    }
+
     // Clear existing content
     window.RubiComponentRenderer.clearContainer(elementsCache.drawerContent);
-    
+
     // Apply layout template
     const renderedContent = window.RubiComponentRenderer.applyLayoutTemplate(
         layoutTemplate,
         transformedPayload
     );
-    
+
     // Append to drawer
     elementsCache.drawerContent.appendChild(renderedContent);
-    
+
     // Setup component event handlers
     setupComponentEventHandlers();
 }
@@ -1242,11 +1278,27 @@ function toggleMinimize() {
  * Open drawer
  */
 function openDrawer() {
+    // Re-cache elements if not found initially (handles late injection)
+    const needsRecache = !drawerElement || !elementsCache.drawerContent;
+    if (needsRecache) {
+        console.log('[Rubi Drawer] Re-caching elements on open...');
+        cacheElements();
+        // Set up event listeners after re-caching
+        setupBasicEventListeners();
+    }
+
     drawerState.isOpen = true;
     if (drawerElement) {
         drawerElement.classList.add('open');
     }
     console.log('[Rubi Drawer] Drawer opened');
+
+    // Try to render content if we just re-cached elements or content has only placeholder
+    const hasOnlyPlaceholder = elementsCache.drawerContent?.querySelector('.rubi-placeholder');
+    if (elementsCache.drawerContent && (needsRecache || hasOnlyPlaceholder)) {
+        console.log('[Rubi Drawer] Rendering content after late element discovery');
+        loadInitialState();
+    }
 }
 
 /**
@@ -1267,13 +1319,13 @@ function closeDrawer() {
  */
 function showLoading(message = 'Loading...') {
     // Create loading indicator using InsightCard if available
-    if (window.RubiComponentRenderer) {
+    if (window.RubiComponentRenderer && elementsCache.drawerContent) {
         const loadingData = {
             title: 'Processing',
             content: message,
             icon: '⏳'
         };
-        
+
         const loadingCard = window.RubiComponentRenderer.renderSection('InsightCard', loadingData);
         loadingCard.id = 'loading-indicator';
         elementsCache.drawerContent.insertBefore(loadingCard, elementsCache.drawerContent.firstChild);

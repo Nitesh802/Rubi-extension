@@ -73,6 +73,7 @@ export interface LLMResponse {
   model: string;
   provider: LLMProvider;
   duration?: number;
+  metadata?: Record<string, any>;
 }
 
 export interface ActionDefinition {
@@ -105,7 +106,7 @@ export type ActionHandler = (
 
 export interface ActionUtilities {
   renderPrompt: (template: PromptTemplate, payload: NormalizedRubiContextPayload) => string;
-  callLLM: (prompt: string, config: LLMConfig) => Promise<LLMResponse>;
+  callLLM: (prompt: string, config: Partial<LLMConfig>) => Promise<LLMResponse>;
   validateSchema: (data: any, schemaPath: string) => ValidationResult;
   logger: Logger;
 }
@@ -147,7 +148,7 @@ export interface ActionLogEntry {
   model?: string;
   provider?: LLMProvider;
   duration?: number;
-  inputSize: number;
+  inputSize?: number;
   outputSize?: number;
   error?: string;
   metadata?: Record<string, any>;

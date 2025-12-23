@@ -163,7 +163,7 @@ class OrgIntelligenceService {
   /**
    * Score how well a context matches the ICP
    */
-  scoreICPFit(
+  async scoreICPFit(
     orgId: string | null,
     context: {
       industry?: string;
@@ -172,8 +172,8 @@ class OrgIntelligenceService {
       painPoints?: string[];
       technologies?: string[];
     }
-  ): number {
-    const { data: intelligence } = this.getOrgIntelligence(orgId);
+  ): Promise<number> {
+    const { data: intelligence } = await this.getOrgIntelligence(orgId);
     return orgIntelligencePromptMapper.scoreICPFit(intelligence, context);
   }
 }

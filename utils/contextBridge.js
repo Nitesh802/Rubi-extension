@@ -286,6 +286,32 @@ function initializeIdentity() {
   });
 }
 
+/**
+ * Request fresh context extraction from the page
+ * Triggers the context extractor if available
+ */
+async function requestExtraction() {
+  console.log('[Rubi Bridge] Requesting context extraction');
+
+  if (window.RubiContextExtractor?.extractContext) {
+    try {
+      // Get platform info if available
+      const platform = window.RubiPlatformDetector?.detectPlatform?.() || { platform: 'unknown', pageType: 'default' };
+      const result = await window.RubiContextExtractor.extractContext(platform.platform, platform.pageType);
+      console.log('[Rubi Bridge] Extraction completed');
+      return result;
+    } catch (error) {
+      console.error('[Rubi Bridge] Extraction failed:', error);
+      return null;
+    }
+  } else {
+    console.warn('[Rubi Bridge] Context extractor not available');
+    // Just notify listeners with existing context
+    notifyListeners();
+    return latestContext;
+  }
+}
+
 // Export for use in content scripts
 if (typeof window !== 'undefined') {
   window.RubiContextBridge = {
@@ -296,7 +322,8 @@ if (typeof window !== 'undefined') {
     onNewContext,
     notifyListeners,
     sendContextToRubi,
-    
+    requestExtraction,
+
     // PHASE 9C: Identity methods
     loadIdentityIfAvailable,
     setIdentity,

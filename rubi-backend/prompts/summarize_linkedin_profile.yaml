@@ -12,8 +12,8 @@ model:
   maxTokens: 2000
   topP: 0.95
   fallbackProviders:
-    - provider: openai
-      name: gpt-4-turbo-preview
+    - provider: anthropic
+      name: claude-sonnet-4-20250514
     - provider: google
       name: gemini-2.0-pro
 systemPrompt: |

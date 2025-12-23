@@ -14,13 +14,19 @@ class OrgConfigService {
     this.defaultConfig = {
       planTier: 'free',
       allowedActions: [
-        'summarize_linkedin_profile',
+        'analyze_linkedin_profile',
         'analyze_email_message',
+        'analyze_opportunity_risk',
+        'get_dashboard_insights',
+        'generate_email_draft',
+        'extract_action_items',
+        // Legacy action names for extension compatibility
+        'summarize_linkedin_profile',
         'review_salesforce_opportunity',
         'generate_dashboard_insights'
       ],
       modelPreferences: {
-        defaultProvider: 'openai'
+        defaultProvider: 'anthropic'
       },
       toneProfile: {
         id: 'default',
