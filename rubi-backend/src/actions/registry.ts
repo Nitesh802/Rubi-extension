@@ -91,6 +91,20 @@ export class ActionRegistry {
         max: 25,
       },
     });
+
+    // Legacy action name aliases for extension compatibility
+    this.register({
+      name: 'summarize_linkedin_profile',
+      description: 'Alias for analyze_linkedin_profile',
+      templateFile: 'analyze_linkedin_profile',
+      schemaFile: 'analyze_linkedin_profile',
+      handler: analyzeLinkedInProfile,
+      requiresAuth: true,
+      rateLimit: {
+        windowMs: 60000,
+        max: 10,
+      },
+    });
   }
 
   register(action: ActionDefinition): void {
