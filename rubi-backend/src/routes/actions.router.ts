@@ -8,7 +8,7 @@ import { analytics } from '../logging/analytics';
 import { authMiddleware } from '../middleware/auth';
 import { extensionAuthService, ExtensionAuthRequest } from '../middleware/extensionAuth';
 import { securityMiddleware } from '../middleware/security';
-import { NormalizedRubiContextPayload, ActionUtilities, AuthenticatedRequestContext, ActionExecutionMetadata } from '../types';
+import { NormalizedRubiContextPayload, ActionUtilities, AuthenticatedRequestContext, ActionExecutionMetadata, LLMConfig, LLMProvider } from '../types';
 import { OrgConfig } from '../types/orgConfig';
 import { orgConfigService } from '../config/orgConfigService';
 import { orgIntelligenceService } from '../services/orgIntelligenceService';
@@ -56,7 +56,7 @@ router.post(
     const contextBuilder = createExecutionContextBuilder()
       .setAction(actionName)
       .setRequestId(requestId)
-      .setOrgConfigSource(req.orgConfigSource || 'unknown', orgConfig)
+      .setOrgConfigSource(req.orgConfigSource || 'default', orgConfig)
       .setIdentitySource(req.identitySource || 'anonymous', req.rubiAuthContext);
 
     try {
@@ -204,9 +204,10 @@ router.post(
       const utilities: ActionUtilities = {
         renderPrompt: (template, data) => {
           // Phase 9D & 11D: Extend template data with org config and intelligence context
+          const sessionUser = authContext.session?.user;
           const extendedData = {
             ...data,
-            user: authContext.session?.user || null,
+            user: sessionUser ? { id: sessionUser.userId || 'unknown', ...sessionUser } : { id: 'unknown' },
             org: authContext.session?.org || null,
             auth: {
               isDevMode: authContext.isDevMode,
@@ -229,11 +230,11 @@ router.post(
             : undefined;
           
           // Phase 9D: Override provider/model based on org config
-          const effectiveConfig = {
+          const effectiveConfig: Partial<LLMConfig> = {
             ...config,
-            provider: modelPreferences.provider || config.provider,
+            provider: (modelPreferences.provider || config.provider) as LLMProvider,
             model: modelPreferences.model || config.model,
-            maxTokens: orgConfig?.limits?.maxTokensPerAction 
+            maxTokens: orgConfig?.limits?.maxTokensPerAction
               ? Math.min(config.maxTokens || 4000, orgConfig.limits.maxTokensPerAction)
               : config.maxTokens,
           };
@@ -435,7 +436,7 @@ router.post(
     const contextBuilder = createExecutionContextBuilder()
       .setAction(effectiveActionName)
       .setRequestId(requestId)
-      .setOrgConfigSource(req.orgConfigSource || 'unknown', orgConfig)
+      .setOrgConfigSource(req.orgConfigSource || 'default', orgConfig)
       .setIdentitySource(req.identitySource || 'anonymous', req.rubiAuthContext);
 
     try {

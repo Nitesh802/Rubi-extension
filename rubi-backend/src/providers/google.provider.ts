@@ -67,7 +67,7 @@ export class GoogleGeminiProvider {
 
       // Add JSON response format if specified
       if (config.responseFormat?.type === 'json_object') {
-        requestBody.generationConfig.responseMimeType = 'application/json';
+        (requestBody.generationConfig as any).responseMimeType = 'application/json';
       }
 
       const response = await fetch(url, {
@@ -79,11 +79,11 @@ export class GoogleGeminiProvider {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json() as any;
         throw new Error(errorData.error?.message || `Gemini API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       const content = data.candidates[0]?.content?.parts[0]?.text;
 
       if (!content) {
@@ -147,7 +147,7 @@ export class GoogleGeminiProvider {
         throw new Error(`Failed to list models: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       return data.models
         .filter((model: any) => model.supportedGenerationMethods?.includes('generateContent'))
         .map((model: any) => model.name.replace('models/', ''));

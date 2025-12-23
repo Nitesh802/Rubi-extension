@@ -116,7 +116,7 @@ export class OrgIntelligencePromptMapper {
           roles: intelligence.icp.targetRoles.slice(0, 5),
           triggers: intelligence.icp.buyingTriggers.slice(0, 3),
           painPoints: intelligence.icp.painPoints.slice(0, 3),
-          companySizes: intelligence.icp.companySizeRange,
+          companySizes: intelligence.icp.companySizes,
         },
         narratives: intelligence.strategicNarratives.slice(0, maxNarratives).map(n => ({
           title: n.title,
@@ -132,7 +132,7 @@ export class OrgIntelligencePromptMapper {
       if (includeSuccessStories && intelligence.successStories) {
         mapped.successStories = intelligence.successStories.slice(0, 3).map(s => ({
           client: s.clientName,
-          outcome: s.outcome,
+          outcome: s.results,
         }));
       }
 
@@ -212,7 +212,6 @@ export class OrgIntelligencePromptMapper {
       forbidden: intelligence.messagingRules.forbiddenPhrases,
       preferred: intelligence.messagingRules.preferredTerms,
       style: intelligence.messagingRules.interactionStyle,
-      voiceCharacteristics: intelligence.messagingRules.voiceCharacteristics,
     };
   }
 
@@ -225,10 +224,9 @@ export class OrgIntelligencePromptMapper {
     return {
       industries: intelligence.icp.targetIndustries,
       roles: intelligence.icp.targetRoles,
-      companySizes: intelligence.icp.companySizeRange,
+      companySizes: intelligence.icp.companySizes,
       painPoints: intelligence.icp.painPoints,
       triggers: intelligence.icp.buyingTriggers,
-      technographics: intelligence.icp.technographics,
     };
   }
 
@@ -272,7 +270,7 @@ export class OrgIntelligencePromptMapper {
     // Company size match (20 points)
     if (context.companySize) {
       factors++;
-      const sizeMatch = intelligence.icp.companySizeRange?.includes(context.companySize);
+      const sizeMatch = intelligence.icp.companySizes?.includes(context.companySize);
       if (sizeMatch) score += 20;
     }
 

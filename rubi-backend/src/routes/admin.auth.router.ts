@@ -7,7 +7,7 @@ const router = Router();
 
 // Admin login
 router.post('/login', 
-  securityMiddleware.rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 }), // 5 attempts per 15 minutes
+  securityMiddleware.rateLimiter(15 * 60 * 1000, 5), // 5 attempts per 15 minutes
   async (req: Request, res: Response) => {
     try {
       const { username, password } = req.body;
