@@ -30,17 +30,17 @@ export abstract class BaseLLMProvider {
     throw lastError;
   }
 
-  protected extractJsonFromResponse(text: string): any {
+  protected extractJsonFromResponse(text: string): { success: boolean; data: any; error?: string } {
     text = text.trim();
 
     try {
-      return JSON.parse(text);
+      return { success: true, data: JSON.parse(text) };
     } catch {
       // Try to extract JSON from markdown code blocks
       const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
       if (jsonMatch && jsonMatch[1]) {
         try {
-          return JSON.parse(jsonMatch[1]);
+          return { success: true, data: JSON.parse(jsonMatch[1]) };
         } catch {}
       }
 
@@ -48,13 +48,16 @@ export abstract class BaseLLMProvider {
       const objectMatch = text.match(/\{[\s\S]*\}/);
       if (objectMatch) {
         try {
-          return JSON.parse(objectMatch[0]);
+          return { success: true, data: JSON.parse(objectMatch[0]) };
         } catch {}
       }
 
-      // If all JSON extraction fails, return the raw text wrapped in an object
-      // This prevents errors when the AI returns non-JSON content
-      return { rawResponse: text, parseError: 'Could not parse as JSON' };
+      // If all JSON extraction fails, return failure with raw text for debugging
+      return {
+        success: false,
+        data: { rawResponse: text.substring(0, 500), parseError: 'Could not parse as JSON' },
+        error: 'Failed to parse JSON from AI response'
+      };
     }
   }
 }

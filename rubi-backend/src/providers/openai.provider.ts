@@ -40,19 +40,31 @@ export class OpenAIProvider extends BaseLLMProvider {
       const content = response.choices[0]?.message?.content || '';
       const duration = Date.now() - startTime;
 
+      const promptTokens = response.usage?.prompt_tokens || 0;
+      const completionTokens = response.usage?.completion_tokens || 0;
+      const totalTokens = response.usage?.total_tokens || 0;
+
       let data = content;
       if (this.config.responseFormat?.type === 'json_object') {
-        data = this.extractJsonFromResponse(content);
+        const parseResult = this.extractJsonFromResponse(content);
+        if (!parseResult.success) {
+          return {
+            success: false,
+            data: parseResult.data,
+            error: parseResult.error || 'Failed to parse JSON from AI response',
+            usage: { promptTokens, completionTokens, totalTokens },
+            model: response.model,
+            provider: 'openai',
+            duration,
+          };
+        }
+        data = parseResult.data;
       }
 
       return {
         success: true,
         data,
-        usage: {
-          promptTokens: response.usage?.prompt_tokens || 0,
-          completionTokens: response.usage?.completion_tokens || 0,
-          totalTokens: response.usage?.total_tokens || 0,
-        },
+        usage: { promptTokens, completionTokens, totalTokens },
         model: response.model,
         provider: 'openai',
         duration,

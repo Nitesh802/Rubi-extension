@@ -37,7 +37,14 @@ export const analyzeLinkedInProfile: ActionHandler = async (payload, utilities, 
       responseFormat: template.outputFormat === 'json' ? { type: 'json_object' } : undefined,
     };
 
-    const llmResponse = await utilities.callLLM(prompt, llmConfig);
+    let llmResponse = await utilities.callLLM(prompt, llmConfig);
+
+    // Retry once if JSON parsing failed (common issue with LLM responses)
+    if (!llmResponse.success && llmResponse.error?.includes('JSON')) {
+      utilities.logger.warn('JSON parse failed, retrying with explicit JSON instruction');
+      const retryPrompt = prompt + '\n\nIMPORTANT: Your response MUST be valid JSON starting with { and ending with }. No markdown, no explanation, just pure JSON.';
+      llmResponse = await utilities.callLLM(retryPrompt, llmConfig);
+    }
 
     if (!llmResponse.success) {
       return {

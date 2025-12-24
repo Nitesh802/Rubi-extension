@@ -32,18 +32,35 @@ export class AnthropicProvider extends BaseLLMProvider {
         });
       });
 
-      const content = response.content[0].type === 'text' 
-        ? response.content[0].text 
+      const content = response.content[0].type === 'text'
+        ? response.content[0].text
         : '';
       const duration = Date.now() - startTime;
 
-      let data = content;
-      if (this.config.responseFormat?.type === 'json_object') {
-        data = this.extractJsonFromResponse(content);
-      }
-
       const inputTokens = response.usage?.input_tokens || 0;
       const outputTokens = response.usage?.output_tokens || 0;
+
+      let data = content;
+      if (this.config.responseFormat?.type === 'json_object') {
+        const parseResult = this.extractJsonFromResponse(content);
+        if (!parseResult.success) {
+          // JSON parsing failed - return as failed response so it can be retried
+          return {
+            success: false,
+            data: parseResult.data,
+            error: parseResult.error || 'Failed to parse JSON from AI response',
+            usage: {
+              promptTokens: inputTokens,
+              completionTokens: outputTokens,
+              totalTokens: inputTokens + outputTokens,
+            },
+            model: response.model,
+            provider: 'anthropic',
+            duration,
+          };
+        }
+        data = parseResult.data;
+      }
 
       return {
         success: true,
