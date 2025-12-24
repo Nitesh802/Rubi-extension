@@ -362,7 +362,7 @@
             pageType: payload?.pageType,
             fields: payload?.fields || {}
         };
-        
+
         // Merge each action result
         if (Array.isArray(actionResults)) {
             actionResults.forEach(result => {
@@ -371,6 +371,17 @@
                     Object.assign(merged, result.stubData);
                 }
                 if (result && result.data) {
+                    // Skip merge if this is a failed parse response from backend
+                    // The backend returns { rawResponse, parseError } when AI doesn't return valid JSON
+                    if (result.data.parseError) {
+                        console.warn('[Rubi Mapper] Skipping result with parse error:', result.data.parseError);
+                        return; // Skip this result
+                    }
+                    // Also skip if there's no meaningful data (just rawResponse)
+                    if (result.data.rawResponse && Object.keys(result.data).length <= 2) {
+                        console.warn('[Rubi Mapper] Skipping result with only raw response');
+                        return; // Skip this result
+                    }
                     // Merge data from backend response
                     Object.assign(merged, result.data);
                 }

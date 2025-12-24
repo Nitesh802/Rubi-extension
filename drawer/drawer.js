@@ -42,6 +42,10 @@ let dependencyCheckCount = 0;
 const maxDependencyChecks = 30; // 3 seconds total
 const dependencyCheckDelay = 100; // 100ms between checks
 
+// Track initialization to prevent duplicate listeners/actions
+let contextBridgeInitialized = false;
+let lastContextHash = null;
+
 /**
  * Initialize the Rubi Drawer with dependency checking
  */
@@ -374,21 +378,51 @@ function initializeContextBridge() {
         console.warn('[Rubi Drawer] Context bridge not available yet');
         return;
     }
-    
+
+    // Prevent duplicate initialization
+    if (contextBridgeInitialized) {
+        console.log('[Rubi Drawer] Context bridge already initialized, skipping');
+        return;
+    }
+
     console.log('[Rubi Drawer] Initializing context bridge integration');
-    
-    // Register for context updates
+    contextBridgeInitialized = true;
+
+    // Register for context updates (only once)
     window.RubiContextBridge.onNewContext((payload) => {
         console.log('[Rubi Drawer] Received new context update');
-        handleContextUpdate(payload);
+        handleContextUpdateWithDedup(payload);
     });
-    
+
     // Get existing context if available
     const existingContext = window.RubiContextBridge.getLatestContext();
     if (existingContext) {
         console.log('[Rubi Drawer] Found existing context');
-        handleContextUpdate(existingContext);
+        handleContextUpdateWithDedup(existingContext);
     }
+}
+
+/**
+ * Handle context update with deduplication
+ * Prevents processing the same context multiple times
+ */
+function handleContextUpdateWithDedup(payload) {
+    // Create a simple hash of the payload to detect duplicates
+    const payloadHash = JSON.stringify({
+        platform: payload?.platform,
+        pageType: payload?.pageType,
+        url: payload?.url,
+        // Include a key field if available for more accurate dedup
+        name: payload?.name || payload?.profileName || payload?.opportunityName || payload?.subject
+    });
+
+    if (payloadHash === lastContextHash) {
+        console.log('[Rubi Drawer] Duplicate context update detected, skipping');
+        return;
+    }
+
+    lastContextHash = payloadHash;
+    handleContextUpdate(payload);
 }
 
 /**

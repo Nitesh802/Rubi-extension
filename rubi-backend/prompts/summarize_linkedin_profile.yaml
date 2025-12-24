@@ -52,7 +52,7 @@ userPrompt: |
   {{/each}}
   {{/if}}
 
-  Generate a JSON response with this exact structure:
+  Generate a JSON response with this exact structure. Respond with ONLY the JSON object - no markdown, no code blocks, no explanation text. Start with { and end with }:
   {
     "summary": "2-3 sentence executive summary of the person's professional profile",
     "talkingPoints": [
@@ -123,6 +123,8 @@ retryPrompt: |
   5. Enum values match exactly (case-sensitive)
   
   Focus on accuracy and completeness while maintaining the exact schema structure.
+
+  CRITICAL: You MUST respond with ONLY valid JSON. Do not include any explanatory text, markdown formatting, or code blocks. Start your response with { and end with }. The response must be parseable by JSON.parse().
 metadata:
   schemaVersion: "2.0"
   requiredContextFields: ["url", "platform"]

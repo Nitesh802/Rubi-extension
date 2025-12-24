@@ -104,9 +104,11 @@ userPrompt: |
   }
   
   {{#if orgIntelligence}}
-  IMPORTANT: Ensure your outreach suggestions align with {{orgIntelligence.company.name}}'s messaging guidelines 
+  IMPORTANT: Ensure your outreach suggestions align with {{orgIntelligence.company.name}}'s messaging guidelines
   and avoid these forbidden phrases: {{#each orgIntelligence.messagingRules.forbidden}}{{this}}, {{/each}}
   {{/if}}
+
+  CRITICAL: You MUST respond with ONLY valid JSON. Do not include any explanatory text, markdown formatting, or code blocks. Start your response with { and end with }. The response must be parseable by JSON.parse().
 variables:
   - url
   - platform
