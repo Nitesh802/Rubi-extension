@@ -10,20 +10,30 @@ export const analyzeLinkedInProfile: ActionHandler = async (payload, utilities, 
     const orgIntelligence = (authContext as any)?.orgIntelligence || null;
     const orgIntelligenceSource = orgIntelligence ? 'provided' : 'none';
     
+    // Cast to any to access runtime properties that may not be in the TypeScript type
+    const payloadAny = payload as any;
+    const fields = payloadAny.fields || payload.context?.data || {};
+
     utilities.logger.info('[Rubi Actions] Analyzing LinkedIn profile', {
       orgId,
       profileUrl: payload.url,
       orgIntelligenceSource,
       orgIntelligenceApplied: !!orgIntelligence,
+      hasFields: !!fields && Object.keys(fields).length > 0,
+      fieldKeys: Object.keys(fields),
+      fullName: fields.fullName,
+      payloadKeys: Object.keys(payload),
     });
     
     const template = await templateEngine.loadTemplate('analyze_linkedin_profile');
     
     // Phase 11E: Use the mapper for consistent org intelligence formatting
+    // Ensure fields is explicitly available for the template
     const promptData = {
       ...payload,
-      orgIntelligence: orgIntelligence 
-        ? orgIntelligenceService.getIntelligenceForPrompt(orgIntelligence, 'analyze_linkedin_profile') 
+      fields: fields, // Explicitly include fields for template access
+      orgIntelligence: orgIntelligence
+        ? orgIntelligenceService.getIntelligenceForPrompt(orgIntelligence, 'analyze_linkedin_profile')
         : null,
     };
     
