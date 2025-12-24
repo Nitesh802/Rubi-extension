@@ -123,21 +123,47 @@ export class TemplateEngine {
 
   private processIterators(template: string, payload: any): string {
     const regex = /\{\{#each\s+([^}]+)\}\}([\s\S]*?)\{\{\/each\}\}/g;
-    
+
     return template.replace(regex, (match, listPath, itemTemplate) => {
       const list = this.resolveVariable(listPath.trim(), payload);
-      
-      if (!Array.isArray(JSON.parse(list))) {
+
+      // Handle empty or invalid list values
+      if (!list || list === '') {
         return '';
       }
 
-      const items = JSON.parse(list);
-      return items.map((item: any, index: number) => {
-        let rendered = itemTemplate;
-        rendered = rendered.replace(/\{\{this\}\}/g, JSON.stringify(item));
-        rendered = rendered.replace(/\{\{@index\}\}/g, String(index));
-        return rendered;
-      }).join('');
+      try {
+        const items = JSON.parse(list);
+        if (!Array.isArray(items)) {
+          return '';
+        }
+
+        return items.map((item: any, index: number) => {
+          let rendered = itemTemplate;
+          // Handle {{this.property}} patterns
+          const thisPropertyRegex = /\{\{this\.([^}]+)\}\}/g;
+          rendered = rendered.replace(thisPropertyRegex, (m, propPath) => {
+            const parts = propPath.split('.');
+            let value: any = item;
+            for (const part of parts) {
+              if (value && typeof value === 'object') {
+                value = value[part];
+              } else {
+                return '';
+              }
+            }
+            return value !== null && value !== undefined ? String(value) : '';
+          });
+          // Handle simple {{this}} for string items
+          rendered = rendered.replace(/\{\{this\}\}/g,
+            typeof item === 'string' ? item : JSON.stringify(item));
+          rendered = rendered.replace(/\{\{@index\}\}/g, String(index));
+          return rendered;
+        }).join('');
+      } catch {
+        // JSON parse failed - list is not valid JSON
+        return '';
+      }
     });
   }
 

@@ -634,6 +634,29 @@ router.get(
   }
 );
 
+// Development endpoint: Clear template cache
+// This is useful when updating template files without restarting the server
+router.post(
+  '/clear-cache',
+  extensionAuthService.requireExtensionAuth,
+  async (req: ExtensionAuthRequest, res: Response) => {
+    try {
+      templateEngine.clearCache();
+      logger.info('[ActionRouter] Template cache cleared');
+      res.json({
+        success: true,
+        message: 'Template cache cleared successfully',
+      });
+    } catch (error) {
+      logger.error('[ActionRouter] Failed to clear template cache:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to clear template cache',
+      });
+    }
+  }
+);
+
 router.post(
   '/validate',
   extensionAuthService.requireExtensionAuth,

@@ -22,11 +22,13 @@ export const analyzeLinkedInProfile: ActionHandler = async (payload, utilities, 
       hasFields: !!fields && Object.keys(fields).length > 0,
       fieldKeys: Object.keys(fields),
       fullName: fields.fullName,
+      headline: fields.headline,
+      experienceCount: Array.isArray(fields.experience) ? fields.experience.length : 0,
       payloadKeys: Object.keys(payload),
     });
-    
+
     const template = await templateEngine.loadTemplate('analyze_linkedin_profile');
-    
+
     // Phase 11E: Use the mapper for consistent org intelligence formatting
     // Ensure fields is explicitly available for the template
     const promptData = {
@@ -36,8 +38,25 @@ export const analyzeLinkedInProfile: ActionHandler = async (payload, utilities, 
         ? orgIntelligenceService.getIntelligenceForPrompt(orgIntelligence, 'analyze_linkedin_profile')
         : null,
     };
-    
+
+    // Log the prompt data being passed to the template
+    utilities.logger.debug('[Rubi Actions] Prompt data for template:', {
+      hasUrl: !!promptData.url,
+      hasPlatform: !!promptData.platform,
+      hasFields: !!promptData.fields,
+      fieldsFullName: promptData.fields?.fullName,
+      fieldsHeadline: promptData.fields?.headline,
+      hasOrgIntelligence: !!promptData.orgIntelligence,
+    });
+
     const prompt = utilities.renderPrompt(template, promptData);
+
+    // Log a snippet of the rendered prompt to verify data is included
+    utilities.logger.debug('[Rubi Actions] Rendered prompt snippet:', {
+      promptLength: prompt.length,
+      promptStart: prompt.substring(0, 200),
+      containsProfileData: prompt.includes('Name:') && !prompt.includes('Name: \n'),
+    });
 
     const llmConfig: Partial<LLMConfig> = {
       provider: template.model.provider,
