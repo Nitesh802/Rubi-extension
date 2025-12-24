@@ -28,9 +28,24 @@ userPrompt: |
 
   Profile URL: {{url}}
   Platform: {{platform}}
-  
+
   Profile Data:
-  {{context.data}}
+  Name: {{fields.fullName}}
+  Headline: {{fields.headline}}
+  Location: {{fields.location}}
+  About: {{fields.about}}
+
+  Experience:
+  {{#each fields.experience}}
+  - {{this.title}} at {{this.company}} ({{this.duration}})
+  {{/each}}
+
+  Education:
+  {{#each fields.education}}
+  - {{this.school}}: {{this.degree}}
+  {{/each}}
+
+  Skills: {{#each fields.skills}}{{this}}, {{/each}}
 
   {{#if orgIntelligence}}
   ===== ORGANIZATION CONTEXT =====
@@ -112,7 +127,7 @@ userPrompt: |
 variables:
   - url
   - platform
-  - context.data
+  - fields
   - orgIntelligence
 outputFormat: json
 retryPrompt: |
