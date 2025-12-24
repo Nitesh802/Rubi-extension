@@ -385,6 +385,11 @@
 
     // Transform backend AI response to UI component expected format
     function transformBackendDataForUI(data) {
+        console.log('[Rubi Mapper] transformBackendDataForUI input keys:', Object.keys(data));
+        console.log('[Rubi Mapper] Has summary:', !!data.summary);
+        console.log('[Rubi Mapper] Has talkingPoints:', !!data.talkingPoints, Array.isArray(data.talkingPoints) ? data.talkingPoints.length : 0);
+        console.log('[Rubi Mapper] Has engagementIdeas:', !!data.engagementIdeas, Array.isArray(data.engagementIdeas) ? data.engagementIdeas.length : 0);
+
         const transformed = { ...data };
 
         // Transform summary to profile overview for InsightCard
