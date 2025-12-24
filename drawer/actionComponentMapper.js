@@ -389,6 +389,9 @@
         console.log('[Rubi Mapper] Has summary:', !!data.summary);
         console.log('[Rubi Mapper] Has talkingPoints:', !!data.talkingPoints, Array.isArray(data.talkingPoints) ? data.talkingPoints.length : 0);
         console.log('[Rubi Mapper] Has engagementIdeas:', !!data.engagementIdeas, Array.isArray(data.engagementIdeas) ? data.engagementIdeas.length : 0);
+        console.log('[Rubi Mapper] Has networkingTips:', !!data.networkingTips);
+        console.log('[Rubi Mapper] Has personalizedOutreach:', !!data.personalizedOutreach);
+        console.log('[Rubi Mapper] Has keyStrengths:', !!data.keyStrengths);
 
         const transformed = { ...data };
 
@@ -403,12 +406,13 @@
             };
         }
 
-        // Transform keyInsights to insight items
-        if (data.keyInsights && Array.isArray(data.keyInsights)) {
+        // Transform keyInsights OR keyStrengths to insight items
+        const insightSource = data.keyInsights || data.keyStrengths || data.industryInsights;
+        if (insightSource && Array.isArray(insightSource)) {
             if (!transformed.insights) transformed.insights = {};
-            transformed.insights.items = data.keyInsights.map((insight, idx) => ({
+            transformed.insights.items = insightSource.map((insight, idx) => ({
                 type: 'info',
-                text: insight,
+                text: typeof insight === 'string' ? insight : insight.description || insight.text || JSON.stringify(insight),
                 confidence: 'high'
             }));
         }
@@ -422,43 +426,71 @@
             }));
         }
 
-        // Transform talkingPoints for display
-        if (data.talkingPoints && Array.isArray(data.talkingPoints)) {
-            transformed.talkingPointsDisplay = data.talkingPoints.map(tp => ({
-                title: tp.topic,
-                content: tp.opener,
-                detail: tp.relevance,
+        // Transform talkingPoints OR networkingTips for display
+        const talkingSource = data.talkingPoints || data.networkingTips;
+        if (talkingSource && Array.isArray(talkingSource)) {
+            transformed.talkingPointsDisplay = talkingSource.map((tp, idx) => ({
+                title: tp.topic || tp.tip || `Tip ${idx + 1}`,
+                content: tp.opener || tp.context || tp.description || '',
+                detail: tp.relevance || tp.explanation || '',
                 type: 'talking_point'
             }));
         }
 
-        // Transform engagementIdeas to recommendations
-        if (data.engagementIdeas && Array.isArray(data.engagementIdeas)) {
+        // Transform engagementIdeas OR personalizedOutreach to recommendations
+        const engagementSource = data.engagementIdeas || data.personalizedOutreach;
+        if (engagementSource) {
+            // Handle both array and object formats
+            if (Array.isArray(engagementSource)) {
+                transformed.recommendations = {
+                    title: 'Engagement Ideas',
+                    items: engagementSource.map(idea => ({
+                        label: idea.type || idea.title || 'Action',
+                        description: idea.content || idea.message || idea.description || '',
+                        timing: idea.timing || '',
+                        outcome: idea.expectedOutcome || idea.goal || '',
+                        icon: idea.type === 'message' ? '✉️' :
+                              idea.type === 'connection' ? '🤝' :
+                              idea.type === 'endorsement' ? '👍' : '💡'
+                    }))
+                };
+            } else if (typeof engagementSource === 'object') {
+                // Handle object format like {connectionRequest: {...}, followUpMessage: {...}}
+                transformed.recommendations = {
+                    title: 'Engagement Ideas',
+                    items: Object.entries(engagementSource).map(([key, value]) => ({
+                        label: key.replace(/([A-Z])/g, ' $1').trim(),
+                        description: typeof value === 'string' ? value : (value.message || value.content || JSON.stringify(value)),
+                        icon: key.includes('message') ? '✉️' : key.includes('connection') ? '🤝' : '💡'
+                    }))
+                };
+            }
+        }
+
+        // Also handle standalone recommendations array
+        if (data.recommendations && Array.isArray(data.recommendations) && !transformed.recommendations) {
             transformed.recommendations = {
-                title: 'Recommended Actions',
-                items: data.engagementIdeas.map(idea => ({
-                    label: idea.type || 'Action',
-                    description: idea.content,
-                    timing: idea.timing,
-                    outcome: idea.expectedOutcome,
-                    icon: idea.type === 'message' ? '✉️' :
-                          idea.type === 'connection' ? '🤝' :
-                          idea.type === 'endorsement' ? '👍' : '💡'
+                title: 'Recommendations',
+                items: data.recommendations.map(rec => ({
+                    label: rec.type || rec.title || 'Recommendation',
+                    description: typeof rec === 'string' ? rec : (rec.description || rec.content || JSON.stringify(rec)),
+                    icon: '💡'
                 }))
             };
         }
 
-        // Transform risks for display
-        if (data.risks && Array.isArray(data.risks)) {
-            transformed.risksDisplay = data.risks.map(risk => ({
-                type: risk.type,
-                description: risk.description,
-                mitigation: risk.mitigation,
-                severity: 'medium'
+        // Transform risks OR warningFlags for display
+        const riskSource = data.risks || data.warningFlags;
+        if (riskSource && Array.isArray(riskSource)) {
+            transformed.risksDisplay = riskSource.map(risk => ({
+                type: typeof risk === 'string' ? 'warning' : (risk.type || 'warning'),
+                description: typeof risk === 'string' ? risk : (risk.description || risk.flag || risk.text),
+                mitigation: risk.mitigation || risk.suggestion || '',
+                severity: risk.severity || 'medium'
             }));
         }
 
-        // Set profile data for EmailContextCard
+        // Set profile data for ProfileCard
         if (data.fields) {
             transformed.profile = transformed.profile || {};
             transformed.profile.fullName = data.fields.fullName;
@@ -466,6 +498,10 @@
             transformed.profile.company = data.fields.company || extractCompanyFromHeadline(data.fields.headline);
             transformed.profile.location = data.fields.location;
         }
+
+        console.log('[Rubi Mapper] Transformed data has insights:', !!transformed.insights);
+        console.log('[Rubi Mapper] Transformed data has talkingPointsDisplay:', !!transformed.talkingPointsDisplay, transformed.talkingPointsDisplay?.length || 0);
+        console.log('[Rubi Mapper] Transformed data has recommendations:', !!transformed.recommendations);
 
         return transformed;
     }
