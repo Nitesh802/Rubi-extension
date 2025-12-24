@@ -73,7 +73,11 @@
         });
         
         console.log('[Rubi Mapper] Generated view model for', Object.keys(viewModel).length, 'components');
-        return viewModel;
+
+        // Return both the mergedData (for dataKey lookups) and viewModel (for component name lookups)
+        // The mergedData contains: insights, talkingPointsDisplay, recommendations, profile, etc.
+        // The viewModel contains: InsightCard, TalkingPointsCard, etc.
+        return { ...mergedData, ...viewModel };
     }
 
     // Generate semantic enrichments based on context
