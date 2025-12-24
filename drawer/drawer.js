@@ -604,10 +604,28 @@ function renderExperienceLayout(experience, viewModel, payload) {
     // Render each section from the layout
     layoutTemplate.sections.forEach((section, index) => {
         const componentName = section.component;
-        const componentData = viewModel[componentName] || {};
-        
+
+        // Look up data using dataKey path (e.g., 'insights.profile') or fall back to component name
+        let componentData = {};
+        if (section.dataKey) {
+            // Extract value at dataKey path
+            const parts = section.dataKey.split('.');
+            let value = viewModel;
+            for (const part of parts) {
+                if (value && typeof value === 'object') {
+                    value = value[part];
+                } else {
+                    value = undefined;
+                    break;
+                }
+            }
+            componentData = value || section.defaultData || {};
+        } else {
+            componentData = viewModel[componentName] || section.defaultData || {};
+        }
+
         // Merge with static data from layout
-        const mergedData = Object.assign({}, section.staticData, componentData);
+        const mergedData = Object.assign({}, section.staticData, section.defaultData, componentData);
         
         // Render component
         const element = window.RubiComponentRenderer.renderSection(componentName, mergedData);
