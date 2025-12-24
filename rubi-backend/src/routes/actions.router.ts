@@ -500,6 +500,11 @@ router.post(
             orgConfig: orgConfig ? { orgName: orgConfig.orgName, planTier: orgConfig.planTier } : null,
             orgIntelligence: orgIntelligence ? orgIntelligenceService.getIntelligenceForPrompt(orgIntelligence, effectiveActionName) : null,
           };
+          // Debug: Log what data is being passed to template
+          logger.info('[renderPrompt] Template data keys:', Object.keys(extendedData));
+          logger.info('[renderPrompt] Has fields:', !!(extendedData as any).fields);
+          logger.info('[renderPrompt] Fields keys:', (extendedData as any).fields ? Object.keys((extendedData as any).fields) : []);
+          logger.info('[renderPrompt] fullName:', (extendedData as any).fields?.fullName);
           return templateEngine.renderTemplate(template, extendedData);
         },
         callLLM: async (prompt, config) => {
@@ -515,7 +520,13 @@ router.post(
       };
 
       const extendedAuthContext = { ...authContext, orgConfig, orgIntelligence };
-      const result = await actionRegistry.execute(effectiveActionName, payload || context, utilities, extendedAuthContext);
+      const effectivePayload = payload || context;
+      // Debug: Log what payload is being passed to handler
+      logger.info('[/execute] Payload keys:', Object.keys(effectivePayload || {}));
+      logger.info('[/execute] Has fields in payload:', !!(effectivePayload as any)?.fields);
+      logger.info('[/execute] Fields keys:', (effectivePayload as any)?.fields ? Object.keys((effectivePayload as any).fields) : []);
+      logger.info('[/execute] fullName from payload:', (effectivePayload as any)?.fields?.fullName);
+      const result = await actionRegistry.execute(effectiveActionName, effectivePayload, utilities, extendedAuthContext);
       const duration = Date.now() - startTime;
 
       if (result.success) {
